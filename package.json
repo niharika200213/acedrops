@@ -24,7 +24,6 @@
     "express-validator": "^6.14.0",
     "pg": "^8.7.1",
     "pg-hstore": "^2.3.4",
-    "postgresql": "^0.0.1",
     "sequelize": "^6.12.0-beta.3"
   }
 }
