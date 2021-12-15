@@ -1,25 +1,18 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
-const otp = sequelize.define(
-    'otp',{
+const token = sequelize.define(
+    'token',{
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
         },
-        otp: {
-            type: Sequelize.INTEGER,
-            allowNull: false
-        },
-        email: {
-            type: Sequelize.STRING
-        },
-        phno: {
+        token: {
             type: Sequelize.STRING
         }
     }, {
-    tableName: 'otp'
+    tableName: 'token'
 });
 
-module.exports = otp;
+module.exports = token;
