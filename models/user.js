@@ -17,12 +17,13 @@ const user = sequelize.define(
             allowNull: false
         },
         password: {
-            type: Sequelize.STRING,
-            allowNull: false
+            type: Sequelize.STRING
         },
         phno: {
-            type: Sequelize.STRING,
-            allowNull: false
+            type: Sequelize.STRING
+        },
+        address: {
+            type: Sequelize.TEXT
         }
     }, {
     tableName: 'user'
