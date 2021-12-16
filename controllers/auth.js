@@ -55,7 +55,7 @@ exports.signup_verify = async (req, res, next) => {
         if(user||shop)
             throw new Error('this email already exists');
 
-        await Otp.destroy({where:{[updatedAt,lt]:(Date.now()-300000)}})
+        await Otp.destroy({where:{[updatedAt.lt]:(Date.now()-300000)}})
         const otpInDb = Otp.findOne({where:{email:email}});
         if(!otpInDb)
             throw new Error('otp expired');
