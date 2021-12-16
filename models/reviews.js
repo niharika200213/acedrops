@@ -14,7 +14,7 @@ const review = sequelize.define(
         },
         rating: {
             type: Sequelize.INTEGER,
-            default: 0
+            defaultValue: 0
         }
     }, {
     tableName: 'review'

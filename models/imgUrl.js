@@ -1,22 +1,19 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
-const otp = sequelize.define(
-    'otp',{
+const image = sequelize.define(
+    'image',{
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
         },
-        otp: {
-            type: Sequelize.INTEGER,
-            allowNull: false
-        },
-        email: {
-            type: Sequelize.STRING
+        imageUrl: {
+            type: Sequelize.STRING,
+            defaultValue: 'default-image.jpg'
         }
     }, {
-    tableName: 'otp'
+    tableName: 'image'
 });
 
-module.exports = otp;
+module.exports = image;

@@ -20,20 +20,13 @@ const product = sequelize.define(
             type: Sequelize.TEXT,
             allowNull: false
         },
-        imgUrl: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            default: 'default-image.jpg'
-        },
         rating: {
             type: Sequelize.INTEGER,
-            default: 0
+            defaultValue: 0
         },
         price: {
             type: Sequelize.INTEGER,
             allowNull: false
-        },
-        category: {
-            type: Sequelize.ARRAY(Sequelize.STRING)
         },
         offers: {
             type: Sequelize.DOUBLE
