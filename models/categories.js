@@ -1,22 +1,18 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
-const otp = sequelize.define(
-    'otp',{
+const categories = sequelize.define(
+    'categories',{
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
         },
-        otp: {
-            type: Sequelize.INTEGER,
-            allowNull: false
-        },
-        email: {
+        category: {
             type: Sequelize.STRING
         }
     }, {
-    tableName: 'otp'
+    tableName: 'categories'
 });
 
-module.exports = otp;
+module.exports = categories;

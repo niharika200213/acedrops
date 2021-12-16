@@ -10,6 +10,9 @@ const token = sequelize.define(
         },
         token: {
             type: Sequelize.STRING
+        },
+        email: {
+            type: Sequelize.STRING
         }
     }, {
     tableName: 'token'

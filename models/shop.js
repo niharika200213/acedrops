@@ -40,11 +40,11 @@ const seller = sequelize.define(
         },
         rating: {
             type: Sequelize.INTEGER,
-            default: 0
+            defaultValue: 0
         },
         isVerified: {
             type: Sequelize.BOOLEAN,
-            default: false
+            defaultValue: false
         }
     }, {
     tableName: 'seller'

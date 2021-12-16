@@ -5,7 +5,7 @@ module.exports = async (req, res, next) => {
     let token = req.headers["authorization"];
     token = token.split(" ")[1];
 
-    jwt.verify(token, "access", async (err, user) => {
+    jwt.verify(token, process.env.JWT_KEY_ACCESS, async (err, user) => {
         if (user) {
             const id=user.id;
             const userData = await User.findOne({where:{id:id}})
