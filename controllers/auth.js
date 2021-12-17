@@ -22,18 +22,15 @@ exports.signup = async (req, res, next) => {
         if(user||shop)
             throw new Error('this email already exists');
         
-        const otp=otpgenerator.generate(6, {digits:true, alphabets:false,
-            upperCase:false, specialChars:false});
+        const otp=otpgenerator.generate(6, {digits:true, lowerCaseAlphabets:false,
+            upperCaseAlphabets:false, specialChars:false});
         mailer.send_mail(email,name,otp,'signup otp');
 
         let existing_otp = await Otp.findOne({ where: { email: email } });
-        if(existing_otp){
-            existing_otp.otp = otp;
-            await existing_otp.save();
-        }
-        else{
+        if(existing_otp)
+            await existing_otp.update({otp:otp});
+        else
             await Otp.create({otp:otp,email:email});
-        }
         return res.status(200).json({message:'otp sent successfully'});
     }
     catch(err){
@@ -55,7 +52,7 @@ exports.signup_verify = async (req, res, next) => {
         if(user||shop)
             throw new Error('this email already exists');
 
-        await Otp.destroy({where:{[updatedAt,lt]:(Date.now()-300000)}})
+        await Otp.destroy({where:{[updatedAt.lt]:(Date.now()-300000)}})
         const otpInDb = Otp.findOne({where:{email:email}});
         if(!otpInDb)
             throw new Error('otp expired');

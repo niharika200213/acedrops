@@ -1,19 +1,15 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
-const imgUrl = sequelize.define(
-    'imgUrl',{
+const product_category = sequelize.define(
+    'product_category',{
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             allowNull: false
-        },
-        imageUrl: {
-            type: Sequelize.STRING,
-            defaultValue: 'default-image.jpg'
         }
     }, {
-    tableName: 'imgUrl'
+    tableName: 'product_category'
 });
 
-module.exports = imgUrl;
+module.exports = product_category;
