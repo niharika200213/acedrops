@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/db');
-const seller = sequelize.define(
-    'seller',{
+const shop = sequelize.define(
+    'shop',{
         id: {
             type: Sequelize.INTEGER,
             autoIncrement: true,
@@ -21,8 +21,7 @@ const seller = sequelize.define(
             allowNull: false
         },
         password: {
-            type: Sequelize.STRING,
-            allowNull: false
+            type: Sequelize.STRING
         },
         phno: {
             type: Sequelize.STRING,
@@ -35,9 +34,6 @@ const seller = sequelize.define(
         description: {
             type: Sequelize.TEXT
         },
-        imgUrl: {
-            type: Sequelize.ARRAY(Sequelize.STRING)
-        },
         rating: {
             type: Sequelize.INTEGER,
             defaultValue: 0
@@ -47,7 +43,7 @@ const seller = sequelize.define(
             defaultValue: false
         }
     }, {
-    tableName: 'seller'
+    tableName: 'shop'
 });
 
-module.exports = seller;
+module.exports = shop;
