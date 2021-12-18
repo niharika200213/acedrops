@@ -6,7 +6,7 @@ module.exports = async (req, res, next) => {
     try{
         const {token} = req.body;
         const user = {};
-        const ticket = await client.verifyIdToken({
+        const ticket = await client.verifyAccessToken({
             idToken: token,
             audience: CLIENT_ID,  
         });
