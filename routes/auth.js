@@ -1,8 +1,8 @@
 const express = require('express');
 const { body } = require('express-validator');
-const User = require('../models/user');
 
 const authController = require('../controllers/auth');
+const isAuthGoogle = require('../middleware/isAuthGoogle');
 
 const router = express.Router();
 
@@ -65,5 +65,9 @@ router.post('/login', [
         .isLength({ max: 50 })
         .withMessage('password must be at-max 50 characters long'),
     ],authController.login);
+
+router.post('/loginGoogle', isAuthGoogle, authController.googleLogin);
+
+router.post('/signupGoogle', isAuthGoogle, authController.googleSignup);
     
 module.exports = router;

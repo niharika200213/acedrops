@@ -48,7 +48,8 @@ exports.signup_verify = async (req, res, next) => {
         date = moment({year:date.getFullYear(),month:date.getMonth(),
             day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
             second :date.getSeconds(),millisecond:date.getMilliseconds()}).format().replace('T',' ');
-        const dest = await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
+        await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
+
         if(!validationResult(req).isEmpty())
             throw new Error(validationResult(req).errors[0].msg);
         const {email,name,password,otp} = req.body;
@@ -122,22 +123,32 @@ exports.logout = async (req,res,next) => {
 
 exports.login = async (req,res,next) => {
     try{
-        let isValid;
+        let isValidUser,isValidShop,accesstoken,refreshtoken;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await User.findOne({where:{email:email}});
         if((!user)&&(!shop))
             throw new Error('user does not exists please signup');
         if(user)
-            isValid = await bcrypt.compare(password,user.password);
+            isValidUser = await bcrypt.compare(password,user.password);
         else if(shop)
-            isValid = await bcrypt.compare(password,shop.password);
-        if(isValid)
+            isValidShop = await bcrypt.compare(password,shop.password);
+        if(isValidUser)
         {
-            const accesstoken=jwt.sign({id:user.id,email:email},
+            accesstoken=jwt.sign({id:user.id,email:email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-            const refreshtoken=jwt.sign({id:user.id,email:email},
+            refreshtoken=jwt.sign({id:user.id,email:email},
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        }
+        else if(isValidShop)
+        {
+            accesstoken=jwt.sign({id:shop.id,email:email},
+            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+            refreshtoken=jwt.sign({id:shop.id,email:email},
+            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        }
+        if(isValidShop||isValidUser)
+        {
             const tokenInDb = await Token.findOne({where:{email:email}});
             if(tokenInDb)
                 await tokenInDb.update({token:refreshtoken});
@@ -146,6 +157,54 @@ exports.login = async (req,res,next) => {
             return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
         }
         throw new Error('wrong password');
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.googleLogin = async (req,res,next) => {
+    try{
+        const user = await User.findOne({where:{email:req.user.email}});
+        const shop = await User.findOne({where:{email:req.user.email}});
+        if((!user)&&(!shop))
+            throw new Error('user does not exists please signup');
+            
+        const accesstoken=jwt.sign({id:req.user.id,email:req.user.email},
+        process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+        const refreshtoken=jwt.sign({id:req.user.id,email:req.user.email},
+        process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+
+        const tokenInDb = await Token.findOne({where:{email:req.user.email}});
+        if(tokenInDb)
+            await tokenInDb.update({token:refreshtoken});
+        else
+            await Token.create({token:refreshtoken,email:req.user.email});
+        return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.googleSignup = async (req,res,next) => {
+    try{
+        const user = await User.findOne({where:{email:req.user.email}});
+        const shop = await Shop.findOne({where:{email:req.user.email}});
+        if(user||shop)
+            throw new Error('this email already exists');
+        const newUser = await User.create({name:req.user.name,email:req.user.email});
+        const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
+            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+        const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
+            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        await Token.create({token:refreshtoken,email:email});
+        res.status(200).json({message:'signup successful',
+        access_token:accesstoken,refresh_token:refreshtoken});
     }
     catch(err){
         if(!err.statusCode)
