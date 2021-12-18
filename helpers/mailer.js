@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport(nodemailersendgrid({
 
 exports.send_mail=(email,name,otp,text) =>{
     transporter.sendMail({
-        from: "poolidea1@gmail.com",to: email,
+        from: "eventooze@gmail.com",to: email,
         subject: text,
         text: 'Hello '+ name +',\n\n' + 'your otp is:' + otp + '\n\nThank You!\n',
     });
