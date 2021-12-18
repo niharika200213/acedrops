@@ -21,6 +21,7 @@ const shop = require('./models/shop');
 const token = require('./models/token');
 const user = require('./models/user');
 const product_category = require('./models/product_category');
+const address = require('./models/address');
 
 app.use(express.json());
 
@@ -68,6 +69,11 @@ products.belongsToMany(cart, {through:cart_item});
 categories.belongsToMany(products, {through:product_category});
 products.belongsToMany(categories,{through:product_category});
 
-sequelize.sync({ force: true })
+user.hasMany(address);
+address.belongsTo(user);
+
+order.hasOne(address);
+
+sequelize.sync()
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});

@@ -2,6 +2,8 @@ const bcrypt = require("bcryptjs");
 const jwt=require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const otpgenerator=require('otp-generator'); 
+const moment=require("moment");
+const { Op } = require("sequelize");
 
 const User = require('../models/user');
 const Token=require('../models/token');
@@ -42,9 +44,13 @@ exports.signup = async (req, res, next) => {
 
 exports.signup_verify = async (req, res, next) => {
     try{
+        let date = new Date(Date.now()-300000);
+        date = moment({year:date.getFullYear(),month:date.getMonth(),
+            day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
+            second :date.getSeconds(),millisecond:date.getMilliseconds()}).format().replace('T',' ');
+        const dest = await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
         if(!validationResult(req).isEmpty())
             throw new Error(validationResult(req).errors[0].msg);
-
         const {email,name,password,otp} = req.body;
 
         const user = await User.findOne({where:{email:email}});
@@ -52,8 +58,7 @@ exports.signup_verify = async (req, res, next) => {
         if(user||shop)
             throw new Error('this email already exists');
 
-        await Otp.destroy({where:{[updatedAt.lt]:(Date.now()-300000)}})
-        const otpInDb = Otp.findOne({where:{email:email}});
+        const otpInDb = await Otp.findOne({where:{email:email}});
         if(!otpInDb)
             throw new Error('otp expired');
 
@@ -71,7 +76,8 @@ exports.signup_verify = async (req, res, next) => {
             res.status(200).json({message:'signup successful',
             access_token:accesstoken,refresh_token:refreshtoken});
         }
-        throw new Error('wrong otp');
+        else
+            throw new Error('wrong otp');
     }
     catch(err){
         if(!err.statusCode)
