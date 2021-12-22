@@ -8,6 +8,9 @@ const user = sequelize.define(
             primaryKey: true,
             allowNull: false
         },
+        googleId: {
+            type: Sequelize.STRING
+        },
         name: {
             type: Sequelize.STRING,
             allowNull: false

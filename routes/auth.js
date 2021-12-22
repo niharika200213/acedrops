@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/signup',[
     body('email')
+        .trim()
         .isEmail()
         .withMessage('please enter a valid email')
         .normalizeEmail(),
@@ -24,6 +25,7 @@ router.post('/signup',[
 
 router.post('/signup/verify',[
     body('email')
+        .trim()
         .isEmail()
         .withMessage('please enter a valid email')
         .normalizeEmail(),
@@ -55,6 +57,7 @@ router.post('/logout', authController.logout);
 
 router.post('/login', [
     body('email')
+        .trim()
         .isEmail()
         .withMessage('please enter a valid email')
         .normalizeEmail(),
@@ -69,5 +72,40 @@ router.post('/login', [
 router.post('/loginGoogle', isAuthGoogle, authController.googleLogin);
 
 router.post('/signupGoogle', isAuthGoogle, authController.googleSignup);
+
+router.post('/forgotPass', [
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('please enter a valid email')
+        .normalizeEmail()
+], authController.forgotPass);
+
+router.post('/forgotPassVerify', [
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('please enter a valid email')
+        .normalizeEmail(),
+    body('otp')
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage('please enter otp')
+], authController.forgotPassVerify);
+
+router.post('/newpass', [
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('please enter a valid email')
+        .normalizeEmail(),
+    body('newpass')
+        .trim()
+        .isLength({ min: 8 })
+        .withMessage('password must be atleast 8 characters long')
+        .isLength({ max: 50 })
+        .withMessage('password must be at-max 50 characters long'),
+], authController.newpass);
     
 module.exports = router;

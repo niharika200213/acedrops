@@ -15,6 +15,10 @@ const otp = sequelize.define(
         email: {
             type: Sequelize.STRING,
             allowNull: false
+        },
+        purpose: {
+            type: Sequelize.STRING,
+            defaultValue: "signup"
         }
     }, {
     tableName: 'otp'
