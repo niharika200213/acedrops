@@ -123,6 +123,8 @@ exports.logout = async (req,res,next) => {
 
 exports.login = async (req,res,next) => {
     try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
         let isValidUser,isValidShop,accesstoken,refreshtoken;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
@@ -201,14 +203,107 @@ exports.googleSignup = async (req,res,next) => {
         const shop = await Shop.findOne({where:{email:req.user.email}});
         if(user||shop)
             throw new Error('this email already exists');
-        const newUser = await User.create({name:req.user.name,email:req.user.email});
+        const newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
         const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
         const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-        await Token.create({token:refreshtoken,email:email});
+        await Token.create({token:refreshtoken,email:newUser.email});
         res.status(200).json({message:'signup successful',
         access_token:accesstoken,refresh_token:refreshtoken});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.forgotPass = async (req,res,next) => {
+    try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
+        let newUser;
+        const {email} = req.body;
+        const user = await User.findOne({where:{email:email}});
+        const shop = await Shop.findOne({where:{email:email}});
+        if((!user)&&(!shop))
+            throw new Error('user does not exists please signup');
+        if(user)
+            newUser = user;
+        else if(shop)
+            newUser = shop;
+        const otp=otpgenerator.generate(6, {digits:true, lowerCaseAlphabets:false,
+            upperCaseAlphabets:false, specialChars:false});
+        mailer.send_mail(email,newUser.name,otp,'forgot password otp');
+
+        let existing_otp = await Otp.findOne({ where: { email: email } });
+        if(existing_otp)
+            await existing_otp.update({otp:otp,purpose:"forgot password"});
+        else
+            await Otp.create({otp:otp,email:email,purpose:"forgot password"});
+        return res.status(200).json({message:'otp sent successfully'});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.forgotPassVerify = async (req,res,next) => {
+    try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
+        const {otp,email} = req.body;
+        let date = new Date(Date.now()-300000);
+        date = moment({year:date.getFullYear(),month:date.getMonth(),
+            day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
+            second :date.getSeconds(),millisecond:date.getMilliseconds()}).format().replace('T',' ');
+        await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
+
+        const otpInDb = await Otp.findOne({where:{[Op.and]:[{otp:otp},{email:email}]}});
+        if(!otpInDb)
+            throw new Error('otp expired or wrong otp');
+
+        if(otpInDb.purpose==="forgot password")
+        {
+            await otpInDb.update({purpose:"forgot password verified"});
+            return res.status(200).json({message:'correct otp'});
+        }
+        throw new Error('try again');
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.newpass = async (req,res,next) => {
+    try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
+        
+        let date = new Date(Date.now()-300000);
+        date = moment({year:date.getFullYear(),month:date.getMonth(),
+            day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
+            second :date.getSeconds(),millisecond:date.getMilliseconds()}).format().replace('T',' ');
+        await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
+
+        const {email,newpass} = req.body;
+        const otpInDb = await Otp.findOne({where:{[Op.and]:
+            [{purpose:"forgot password verified"},{email:email}]}});
+        if(!otpInDb)
+            throw new Error('session expired');
+        const user = await User.findOne({where:{email:email}});
+        if(user){
+            const hashedPw = await bcrypt.hash(newpass, 12);
+            await user.update({password:hashedPw});
+            otpInDb.destroy();
+            return res.status(200).json({message:"password changed"});
+        }
+        throw new Error('try again');
     }
     catch(err){
         if(!err.statusCode)
