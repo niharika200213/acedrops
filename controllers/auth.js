@@ -44,6 +44,7 @@ exports.signup = async (req, res, next) => {
 
 exports.signup_verify = async (req, res, next) => {
     try{
+        let newUser;
         let date = new Date(Date.now()-300000);
         date = moment({year:date.getFullYear(),month:date.getMonth(),
             day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
@@ -52,7 +53,7 @@ exports.signup_verify = async (req, res, next) => {
 
         if(!validationResult(req).isEmpty())
             throw new Error(validationResult(req).errors[0].msg);
-        const {email,name,password,otp} = req.body;
+        const {email,name,password,otp,isShop} = req.body;
 
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
@@ -64,10 +65,20 @@ exports.signup_verify = async (req, res, next) => {
             throw new Error('otp expired');
 
         if(otpInDb.otp===otp){
-            const hashedPw = await bcrypt.hash(password, 12);
-            const newUser = await User.create({
-                name:name,email:email,password:hashedPw
-            });
+            if(!isShop)
+            {
+                const hashedPw = await bcrypt.hash(password, 12);
+                newUser = await User.create({
+                    name:name,email:email,password:hashedPw
+                });
+            }
+            else if(isShop)
+            {
+                const hashedPw = await bcrypt.hash(password, 12);
+                newUser = await Shop.create({
+                    name:name,email:email,password:hashedPw
+                });
+            }
             await otpInDb.destroy();
             const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
                 process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
@@ -79,40 +90,6 @@ exports.signup_verify = async (req, res, next) => {
         }
         else
             throw new Error('wrong otp');
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.generate_access_token = async (req,res,next) => {
-    try{
-        const {refreshtoken} = req.body;
-        if(!refreshtoken)
-            throw new Error('token missing');
-        const tokenInDb = await Token.findOne({where:{token:refreshtoken}});
-        if(!tokenInDb)
-            throw new Error('login again');
-        const payload = jwt.verify(tokenInDb.token, process.env.JWT_KEY_REFRESH);
-        const accessToken = jwt.sign({id:payload.id,email:payload.email}, 
-            process.env.JWT_KEY_ACCESS, {expiresIn: "10m"});
-        return res.status(200).json({access_token:accessToken});
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.logout = async (req,res,next) => {
-    try{
-        const { refreshToken } = req.body;
-        const tokenInDb = await Token.findOne({where:{token:refreshToken}});
-        await tokenInDb.destroy();
-        return res.status(200).json({message:'logged out'});
     }
     catch(err){
         if(!err.statusCode)
@@ -199,11 +176,16 @@ exports.googleLogin = async (req,res,next) => {
 
 exports.googleSignup = async (req,res,next) => {
     try{
+        let newUser;
         const user = await User.findOne({where:{email:req.user.email}});
         const shop = await Shop.findOne({where:{email:req.user.email}});
         if(user||shop)
             throw new Error('this email already exists');
-        const newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
+        const {isShop} = req.body;
+        if(!isShop)
+            newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
+        else if(isShop)
+            newUser = await Shop.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
         const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
         const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
@@ -211,6 +193,40 @@ exports.googleSignup = async (req,res,next) => {
         await Token.create({token:refreshtoken,email:newUser.email});
         res.status(200).json({message:'signup successful',
         access_token:accesstoken,refresh_token:refreshtoken});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.generate_access_token = async (req,res,next) => {
+    try{
+        const {refreshtoken} = req.body;
+        if(!refreshtoken)
+            throw new Error('token missing');
+        const tokenInDb = await Token.findOne({where:{token:refreshtoken}});
+        if(!tokenInDb)
+            throw new Error('login again');
+        const payload = jwt.verify(tokenInDb.token, process.env.JWT_KEY_REFRESH);
+        const accessToken = jwt.sign({id:payload.id,email:payload.email}, 
+            process.env.JWT_KEY_ACCESS, {expiresIn: "10m"});
+        return res.status(200).json({access_token:accessToken});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.logout = async (req,res,next) => {
+    try{
+        const { refreshToken } = req.body;
+        const tokenInDb = await Token.findOne({where:{token:refreshToken}});
+        await tokenInDb.destroy();
+        return res.status(200).json({message:'logged out'});
     }
     catch(err){
         if(!err.statusCode)
@@ -302,6 +318,16 @@ exports.newpass = async (req,res,next) => {
             await user.update({password:hashedPw});
             otpInDb.destroy();
             return res.status(200).json({message:"password changed"});
+        }
+        else{
+            const shop = await Shop.findOne({where:{email:email}});
+            if(shop)
+            {
+                const hashedPw = await bcrypt.hash(newpass, 12);
+                await shop.update({password:hashedPw});
+                otpInDb.destroy();
+                return res.status(200).json({message:"password changed"});
+            }
         }
         throw new Error('try again');
     }

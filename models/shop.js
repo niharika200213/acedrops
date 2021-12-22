@@ -8,13 +8,15 @@ const shop = sequelize.define(
             primaryKey: true,
             allowNull: false
         },
+        googleId: {
+            type: Sequelize.STRING
+        },
         name: {
             type: Sequelize.STRING,
             allowNull: false
         },
         shopName: {
-            type: Sequelize.STRING,
-            allowNull: false
+            type: Sequelize.STRING
         },
         email: {
             type: Sequelize.STRING,
@@ -23,20 +25,20 @@ const shop = sequelize.define(
         password: {
             type: Sequelize.STRING
         },
-        phno: {
-            type: Sequelize.STRING,
-            allowNull: false
+        noOfMembers: {
+            type: Sequelize.INTEGER
         },
-        credentials: {
-            type: Sequelize.STRING,
-            allowNull: false
+        phno: {
+            type: Sequelize.STRING
         },
         description: {
             type: Sequelize.TEXT
         },
-        rating: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0
+        address: {
+            type: Sequelize.STRING
+        },
+        fathersName: {
+            type: Sequelize.STRING
         },
         isVerified: {
             type: Sequelize.BOOLEAN,

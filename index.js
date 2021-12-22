@@ -45,7 +45,7 @@ app.use((error, req, res, next) => {
 shop.hasMany(products);
 products.belongsTo(shop);
 
-shop.hasOne(imgUrl);
+shop.hasMany(imgUrl);
 products.hasMany(imgUrl);
 
 user.belongsToMany(products, {through:fav});
@@ -74,6 +74,6 @@ address.belongsTo(user);
 
 order.hasOne(address);
 
-sequelize.sync()
+sequelize.sync({force:true})
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});
