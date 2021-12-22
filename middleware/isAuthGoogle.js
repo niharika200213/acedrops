@@ -6,14 +6,17 @@ module.exports = async (req, res, next) => {
     try{
         const {token} = req.body;
         const user = {};
-        const ticket = await client.verifyAccessToken({
+        const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: CLIENT_ID,  
+            audience: CLIENT_ID  
         });
         const payload = ticket.getPayload();
+        console.log(payload);
         user.name = payload.name;
         user.email = payload.email;
+        user.googleId = payload.sub;
         req.user = user;
+        next();
     }
     catch(err){
         if(!err.statusCode)

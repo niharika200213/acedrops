@@ -167,14 +167,18 @@ exports.login = async (req,res,next) => {
 
 exports.googleLogin = async (req,res,next) => {
     try{
+        let newUser;
         const user = await User.findOne({where:{email:req.user.email}});
         const shop = await User.findOne({where:{email:req.user.email}});
         if((!user)&&(!shop))
             throw new Error('user does not exists please signup');
-            
-        const accesstoken=jwt.sign({id:req.user.id,email:req.user.email},
+        if(user)
+            newUser = user;
+        else if(shop)
+            newUser = shop;            
+        const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-        const refreshtoken=jwt.sign({id:req.user.id,email:req.user.email},
+        const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
 
         const tokenInDb = await Token.findOne({where:{email:req.user.email}});
