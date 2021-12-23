@@ -105,7 +105,7 @@ exports.login = async (req,res,next) => {
         let isValidUser,isValidShop,accesstoken,refreshtoken;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
-        const shop = await User.findOne({where:{email:email}});
+        const shop = await Shop.findOne({where:{email:email}});
         if((!user)&&(!shop))
             throw new Error('user does not exists please signup');
         if(user)
@@ -148,7 +148,7 @@ exports.googleLogin = async (req,res,next) => {
     try{
         let newUser;
         const user = await User.findOne({where:{email:req.user.email}});
-        const shop = await User.findOne({where:{email:req.user.email}});
+        const shop = await Shop.findOne({where:{email:req.user.email}});
         if((!user)&&(!shop))
             throw new Error('user does not exists please signup');
         if(user)

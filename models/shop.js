@@ -26,16 +26,21 @@ const shop = sequelize.define(
             type: Sequelize.STRING
         },
         noOfMembers: {
-            type: Sequelize.INTEGER
+            type: Sequelize.INTEGER,
+            validate: {min: 1}
         },
         phno: {
-            type: Sequelize.STRING
+            type: Sequelize.INTEGER,
+            validate: {len: [10]}
         },
         description: {
             type: Sequelize.TEXT
         },
         address: {
             type: Sequelize.STRING
+        },
+        aadhaarNo: {
+            type: Sequelize.INTEGER
         },
         fathersName: {
             type: Sequelize.STRING

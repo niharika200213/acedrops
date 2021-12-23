@@ -20,23 +20,16 @@ const storage = multer.diskStorage({
 module.exports = (req,res,next) => {
     try
     {
-        console.log('here')
-        let imagesArray=[];
-        let upload = multer({ storage: storage, fileFilter: imageFilter }).array('images', 4);
+        let upload = multer({ storage: storage, fileFilter: imageFilter }).single('image');
         upload(req, res, async function(err) {
             try{
                 if (req.fileValidationError)
-                    throw new Error('format not supported or limit exceeded');
-                else if (!req.files)
+                throw new Error('format not supported or limit exceeded');
+                else if (!req.file)
                     throw new Error('Please select an image to upload');
                 else if (err||err instanceof multer.MulterError)
                     throw new Error(err);
-                const files = Array(req.files);
-                let index;
-                for (index = 0; index < files.length; ++index) {
-                    imagesArray.push(files[index].filename);
-                }
-                req.images=imagesArray;
+                req.image=req.file;
                 next();
             }
             catch(err){
