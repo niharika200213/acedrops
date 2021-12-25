@@ -29,7 +29,7 @@ module.exports = (req,res,next) => {
                     throw new Error('Please select an image to upload');
                 else if (err||err instanceof multer.MulterError)
                     throw new Error(err);
-                req.image=req.file;
+                req.image=req.file.filename;
                 next();
             }
             catch(err){

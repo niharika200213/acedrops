@@ -20,9 +20,8 @@ const storage = multer.diskStorage({
 module.exports = (req,res,next) => {
     try
     {
-        console.log('here')
         let imagesArray=[];
-        let upload = multer({ storage: storage, fileFilter: imageFilter }).array('images', 4);
+        let upload = multer({ storage: storage, fileFilter: imageFilter }).array('images', 10);
         upload(req, res, async function(err) {
             try{
                 if (req.fileValidationError)
@@ -31,7 +30,7 @@ module.exports = (req,res,next) => {
                     throw new Error('Please select an image to upload');
                 else if (err||err instanceof multer.MulterError)
                     throw new Error(err);
-                const files = Array(req.files);
+                const files = req.files;
                 let index;
                 for (index = 0; index < files.length; ++index) {
                     imagesArray.push(files[index].filename);

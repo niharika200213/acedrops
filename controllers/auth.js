@@ -36,6 +36,8 @@ exports.signup = async (req, res, next) => {
         return res.status(200).json({message:'otp sent successfully'});
     }
     catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);
@@ -85,13 +87,15 @@ exports.signup_verify = async (req, res, next) => {
             const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
                 process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
             await Token.create({token:refreshtoken,email:email});
-            res.status(200).json({message:'signup successful',
-            access_token:accesstoken,refresh_token:refreshtoken});
+            res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
+                access_token:accesstoken,refresh_token:refreshtoken});
         }
         else
             throw new Error('wrong otp');
     }
     catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);
@@ -102,7 +106,7 @@ exports.login = async (req,res,next) => {
     try{
         if(!validationResult(req).isEmpty())
             throw new Error(validationResult(req).errors[0].msg);
-        let isValidUser,isValidShop,accesstoken,refreshtoken;
+        let isValidUser,isValidShop,accesstoken,refreshtoken,newUser;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
@@ -114,6 +118,7 @@ exports.login = async (req,res,next) => {
             isValidShop = await bcrypt.compare(password,shop.password);
         if(isValidUser)
         {
+            newUser = user;
             accesstoken=jwt.sign({id:user.id,email:email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
             refreshtoken=jwt.sign({id:user.id,email:email},
@@ -121,6 +126,7 @@ exports.login = async (req,res,next) => {
         }
         else if(isValidShop)
         {
+            newUser = shop;
             accesstoken=jwt.sign({id:shop.id,email:email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
             refreshtoken=jwt.sign({id:shop.id,email:email},
@@ -133,7 +139,8 @@ exports.login = async (req,res,next) => {
                 await tokenInDb.update({token:refreshtoken});
             else
                 await Token.create({token:refreshtoken,email:email});
-            return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
+            return res.status(200).json({name:newUser.name, email:email,
+                access_token:accesstoken,refresh_token:refreshtoken});
         }
         throw new Error('wrong password');
     }
@@ -165,7 +172,8 @@ exports.googleLogin = async (req,res,next) => {
             await tokenInDb.update({token:refreshtoken});
         else
             await Token.create({token:refreshtoken,email:req.user.email});
-        return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
+        return res.status(200).json({access_token:accesstoken, name:newUser.name, email:newUser.email,
+            refresh_token:refreshtoken});
     }
     catch(err){
         if(!err.statusCode)
@@ -191,10 +199,12 @@ exports.googleSignup = async (req,res,next) => {
         const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
         await Token.create({token:refreshtoken,email:newUser.email});
-        res.status(200).json({message:'signup successful',
+        res.status(200).json({message:'signup successful',name:newUser.name, email:newUser.email,
         access_token:accesstoken,refresh_token:refreshtoken});
     }
     catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);

@@ -48,7 +48,9 @@ shop.hasMany(products);
 products.belongsTo(shop);
 
 shop.hasMany(imgUrl);
+imgUrl.belongsTo(shop,{constraints:true});
 products.hasMany(imgUrl);
+imgUrl.belongsTo(products);
 
 user.belongsToMany(products, {through:fav});
 products.belongsToMany(user, {through:fav});
@@ -76,6 +78,8 @@ address.belongsTo(user);
 
 order.hasOne(address);
 
-sequelize.sync()
+sequelize.sync(
+  {force:true}
+  )
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});

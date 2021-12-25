@@ -16,22 +16,28 @@ const shop = sequelize.define(
             allowNull: false
         },
         shopName: {
-            type: Sequelize.STRING
+            type: Sequelize.STRING,
+            unique: true
         },
         email: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         password: {
             type: Sequelize.STRING
+        },
+        dob: {
+            type: Sequelize.DATEONLY
         },
         noOfMembers: {
             type: Sequelize.INTEGER,
             validate: {min: 1}
         },
         phno: {
-            type: Sequelize.INTEGER,
-            validate: {len: [10]}
+            type: Sequelize.BIGINT,
+            validate: {len: [10]},
+            unique: true
         },
         description: {
             type: Sequelize.TEXT
@@ -40,12 +46,17 @@ const shop = sequelize.define(
             type: Sequelize.STRING
         },
         aadhaarNo: {
-            type: Sequelize.INTEGER
+            type: Sequelize.BIGINT,
+            unique: true
         },
         fathersName: {
             type: Sequelize.STRING
         },
         isVerified: {
+            type: Sequelize.BOOLEAN,
+            defaultValue: false
+        },
+        isApplied: {
             type: Sequelize.BOOLEAN,
             defaultValue: false
         }

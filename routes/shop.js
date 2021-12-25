@@ -8,6 +8,10 @@ const uploadImg = require('../middleware/uploadImg');
 
 const router = express.Router();
 
-router.post('/createShop', isAuth, singleImg, uploadImg, shopController.createShop);
+router.post('/createShop', isAuth, shopController.createShopInfo);
+
+router.post('/createShopAdhaar', isAuth, uploadImg, shopController.createShopAdhaarImg);
+
+router.post('/createShopSellerPic', isAuth, singleImg, shopController.createShopSellerPic);
 
 module.exports = router;
