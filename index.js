@@ -4,6 +4,7 @@ const cors=require('cors');
 require('dotenv/config');
 const path = require('path');
 const authRoutes = require('./routes/auth');
+const shopRoutes = require('./routes/shop');
 const sequelize = require('./utils/db');
 const Sequelize = require('sequelize');
 
@@ -32,6 +33,7 @@ app.use(cors({
   methods: ['GET','POST','PUT','DELETE', 'PATCH']
 }));
 app.use('/auth',authRoutes);
+app.use('/shop',shopRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
 app.use(express.static(path.join(__dirname,'images')));
 
@@ -45,8 +47,10 @@ app.use((error, req, res, next) => {
 shop.hasMany(products);
 products.belongsTo(shop);
 
-shop.hasOne(imgUrl);
+shop.hasMany(imgUrl);
+imgUrl.belongsTo(shop,{constraints:true});
 products.hasMany(imgUrl);
+imgUrl.belongsTo(products);
 
 user.belongsToMany(products, {through:fav});
 products.belongsToMany(user, {through:fav});
@@ -74,6 +78,8 @@ address.belongsTo(user);
 
 order.hasOne(address);
 
-sequelize.sync()
+sequelize.sync(
+  {force:true}
+  )
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});

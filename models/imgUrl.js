@@ -11,6 +11,9 @@ const imgUrl = sequelize.define(
         imageUrl: {
             type: Sequelize.STRING,
             defaultValue: 'default-image.jpg'
+        },
+        purpose: {
+            type: Sequelize.STRING
         }
     }, {
     tableName: 'imgUrl'

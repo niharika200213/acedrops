@@ -17,13 +17,16 @@ const user = sequelize.define(
         },
         email: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         password: {
             type: Sequelize.STRING
         },
         phno: {
-            type: Sequelize.STRING
+            type: Sequelize.BIGINT,
+            validate: {len: [10]},
+            unique: true
         }
     }, {
     tableName: 'user'

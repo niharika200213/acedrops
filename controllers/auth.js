@@ -36,6 +36,8 @@ exports.signup = async (req, res, next) => {
         return res.status(200).json({message:'otp sent successfully'});
     }
     catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);
@@ -44,6 +46,7 @@ exports.signup = async (req, res, next) => {
 
 exports.signup_verify = async (req, res, next) => {
     try{
+        let newUser;
         let date = new Date(Date.now()-300000);
         date = moment({year:date.getFullYear(),month:date.getMonth(),
             day:date.getDate(),hour:date.getHours(),minute:date.getMinutes(),
@@ -52,7 +55,7 @@ exports.signup_verify = async (req, res, next) => {
 
         if(!validationResult(req).isEmpty())
             throw new Error(validationResult(req).errors[0].msg);
-        const {email,name,password,otp} = req.body;
+        const {email,name,password,otp,isShop} = req.body;
 
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
@@ -64,23 +67,144 @@ exports.signup_verify = async (req, res, next) => {
             throw new Error('otp expired');
 
         if(otpInDb.otp===otp){
-            const hashedPw = await bcrypt.hash(password, 12);
-            const newUser = await User.create({
-                name:name,email:email,password:hashedPw
-            });
+            if(!isShop)
+            {
+                const hashedPw = await bcrypt.hash(password, 12);
+                newUser = await User.create({
+                    name:name,email:email,password:hashedPw
+                });
+            }
+            else if(isShop)
+            {
+                const hashedPw = await bcrypt.hash(password, 12);
+                newUser = await Shop.create({
+                    name:name,email:email,password:hashedPw
+                });
+            }
             await otpInDb.destroy();
             const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
                 process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
             const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
                 process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
             await Token.create({token:refreshtoken,email:email});
-            res.status(200).json({message:'signup successful',
-            access_token:accesstoken,refresh_token:refreshtoken});
+            res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
+                access_token:accesstoken,refresh_token:refreshtoken});
         }
         else
             throw new Error('wrong otp');
     }
     catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.login = async (req,res,next) => {
+    try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
+        let isValidUser,isValidShop,accesstoken,refreshtoken,newUser;
+        const {email,password} = req.body;
+        const user = await User.findOne({where:{email:email}});
+        const shop = await Shop.findOne({where:{email:email}});
+        if((!user)&&(!shop))
+            throw new Error('user does not exists please signup');
+        if(user)
+            isValidUser = await bcrypt.compare(password,user.password);
+        else if(shop)
+            isValidShop = await bcrypt.compare(password,shop.password);
+        if(isValidUser)
+        {
+            newUser = user;
+            accesstoken=jwt.sign({id:user.id,email:email},
+            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+            refreshtoken=jwt.sign({id:user.id,email:email},
+            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        }
+        else if(isValidShop)
+        {
+            newUser = shop;
+            accesstoken=jwt.sign({id:shop.id,email:email},
+            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+            refreshtoken=jwt.sign({id:shop.id,email:email},
+            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        }
+        if(isValidShop||isValidUser)
+        {
+            const tokenInDb = await Token.findOne({where:{email:email}});
+            if(tokenInDb)
+                await tokenInDb.update({token:refreshtoken});
+            else
+                await Token.create({token:refreshtoken,email:email});
+            return res.status(200).json({name:newUser.name, email:email,
+                access_token:accesstoken,refresh_token:refreshtoken});
+        }
+        throw new Error('wrong password');
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.googleLogin = async (req,res,next) => {
+    try{
+        let newUser;
+        const user = await User.findOne({where:{email:req.user.email}});
+        const shop = await Shop.findOne({where:{email:req.user.email}});
+        if((!user)&&(!shop))
+            throw new Error('user does not exists please signup');
+        if(user)
+            newUser = user;
+        else if(shop)
+            newUser = shop;            
+        const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
+        process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+        const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
+        process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+
+        const tokenInDb = await Token.findOne({where:{email:req.user.email}});
+        if(tokenInDb)
+            await tokenInDb.update({token:refreshtoken});
+        else
+            await Token.create({token:refreshtoken,email:req.user.email});
+        return res.status(200).json({access_token:accesstoken, name:newUser.name, email:newUser.email,
+            refresh_token:refreshtoken});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.googleSignup = async (req,res,next) => {
+    try{
+        let newUser;
+        const user = await User.findOne({where:{email:req.user.email}});
+        const shop = await Shop.findOne({where:{email:req.user.email}});
+        if(user||shop)
+            throw new Error('this email already exists');
+        const {isShop} = req.body;
+        if(!isShop)
+            newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
+        else if(isShop)
+            newUser = await Shop.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
+        const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
+            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
+        const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
+            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
+        await Token.create({token:refreshtoken,email:newUser.email});
+        res.status(200).json({message:'signup successful',name:newUser.name, email:newUser.email,
+        access_token:accesstoken,refresh_token:refreshtoken});
+    }
+    catch(err){
+        if(err.name==='SequelizeUniqueConstraintError')
+            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);
@@ -113,104 +237,6 @@ exports.logout = async (req,res,next) => {
         const tokenInDb = await Token.findOne({where:{token:refreshToken}});
         await tokenInDb.destroy();
         return res.status(200).json({message:'logged out'});
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.login = async (req,res,next) => {
-    try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
-        let isValidUser,isValidShop,accesstoken,refreshtoken;
-        const {email,password} = req.body;
-        const user = await User.findOne({where:{email:email}});
-        const shop = await User.findOne({where:{email:email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
-        if(user)
-            isValidUser = await bcrypt.compare(password,user.password);
-        else if(shop)
-            isValidShop = await bcrypt.compare(password,shop.password);
-        if(isValidUser)
-        {
-            accesstoken=jwt.sign({id:user.id,email:email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-            refreshtoken=jwt.sign({id:user.id,email:email},
-            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-        }
-        else if(isValidShop)
-        {
-            accesstoken=jwt.sign({id:shop.id,email:email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-            refreshtoken=jwt.sign({id:shop.id,email:email},
-            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-        }
-        if(isValidShop||isValidUser)
-        {
-            const tokenInDb = await Token.findOne({where:{email:email}});
-            if(tokenInDb)
-                await tokenInDb.update({token:refreshtoken});
-            else
-                await Token.create({token:refreshtoken,email:email});
-            return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
-        }
-        throw new Error('wrong password');
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.googleLogin = async (req,res,next) => {
-    try{
-        let newUser;
-        const user = await User.findOne({where:{email:req.user.email}});
-        const shop = await User.findOne({where:{email:req.user.email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
-        if(user)
-            newUser = user;
-        else if(shop)
-            newUser = shop;            
-        const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
-        process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-        const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
-        process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-
-        const tokenInDb = await Token.findOne({where:{email:req.user.email}});
-        if(tokenInDb)
-            await tokenInDb.update({token:refreshtoken});
-        else
-            await Token.create({token:refreshtoken,email:req.user.email});
-        return res.status(200).json({access_token:accesstoken,refresh_token:refreshtoken});
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.googleSignup = async (req,res,next) => {
-    try{
-        const user = await User.findOne({where:{email:req.user.email}});
-        const shop = await Shop.findOne({where:{email:req.user.email}});
-        if(user||shop)
-            throw new Error('this email already exists');
-        const newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
-        const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-        const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
-            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-        await Token.create({token:refreshtoken,email:newUser.email});
-        res.status(200).json({message:'signup successful',
-        access_token:accesstoken,refresh_token:refreshtoken});
     }
     catch(err){
         if(!err.statusCode)
@@ -302,6 +328,16 @@ exports.newpass = async (req,res,next) => {
             await user.update({password:hashedPw});
             otpInDb.destroy();
             return res.status(200).json({message:"password changed"});
+        }
+        else{
+            const shop = await Shop.findOne({where:{email:email}});
+            if(shop)
+            {
+                const hashedPw = await bcrypt.hash(newpass, 12);
+                await shop.update({password:hashedPw});
+                otpInDb.destroy();
+                return res.status(200).json({message:"password changed"});
+            }
         }
         throw new Error('try again');
     }
