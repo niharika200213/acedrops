@@ -1,20 +1,9 @@
-const bcrypt = require("bcryptjs");
-const jwt=require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-const otpgenerator=require('otp-generator'); 
-const moment=require("moment");
-const { Op } = require("sequelize");
 const validator = require('aadhaar-validator');
 
-const User = require('../models/user');
-const Token=require('../models/token');
-const Otp=require('../models/otp');
-const Shop=require('../models/shop');
 const imgUrl=require('../models/imgUrl');
 const path=require('path');
 const fs=require('fs');
-
-const mailer=require('../helpers/mailer');
 
 const clearImg = imgArray => {
         for(let i=0; i<imgArray.length; ++i){
