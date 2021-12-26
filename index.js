@@ -23,6 +23,7 @@ const token = require('./models/token');
 const user = require('./models/user');
 const product_category = require('./models/product_category');
 const address = require('./models/address');
+const viewed = require('./models/viewed');
 
 app.use(express.json());
 
@@ -58,6 +59,9 @@ products.belongsToMany(user, {through:fav});
 user.belongsToMany(products, {through:reviews});
 products.belongsToMany(user, {through:reviews});
 
+user.belongsToMany(products, {through:viewed});
+products.belongsToMany(user, {through:viewed});
+
 user.hasOne(cart);
 cart.belongsTo(user);
 
@@ -79,7 +83,7 @@ address.belongsTo(user);
 order.hasOne(address);
 
 sequelize.sync(
-  //{force:true}
+  {force:true}
   )
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});
