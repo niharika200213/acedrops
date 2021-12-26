@@ -79,7 +79,7 @@ address.belongsTo(user);
 order.hasOne(address);
 
 sequelize.sync(
-  {force:true}
+  //{force:true}
   )
 .then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});
