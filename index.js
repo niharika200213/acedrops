@@ -85,5 +85,8 @@ order.hasOne(address);
 sequelize.sync(
   {force:true}
   )
-.then(result=>{app.listen(process.env.PORT||3000); console.log('result');})
+.then(result=>{return categories.findByPk(1);})
+.then(category=>{if(!category)
+      return categories.bulkCreate({category:'jewellery'},{category:'bakery'},{category:'art'});})
+.then(category=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});
