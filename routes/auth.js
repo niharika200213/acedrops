@@ -107,5 +107,19 @@ router.post('/newpass', [
         .isLength({ max: 50 })
         .withMessage('password must be at-max 50 characters long'),
 ], authController.newpass);
+
+router.post('/changePass', [
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('please enter a valid email')
+        .normalizeEmail(),
+    body('newpass')
+        .trim()
+        .isLength({ min: 8 })
+        .withMessage('password must be atleast 8 characters long')
+        .isLength({ max: 50 })
+        .withMessage('password must be at-max 50 characters long'),
+], authController.changePass);
     
 module.exports = router;

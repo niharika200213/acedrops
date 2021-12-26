@@ -347,3 +347,35 @@ exports.newpass = async (req,res,next) => {
         next(err);
     }
 };
+
+exports.changePass = async (req,res,next) => {
+    try{
+        if(!validationResult(req).isEmpty())
+            throw new Error(validationResult(req).errors[0].msg);
+        let isValidUser,isValidShop,newUser;
+        const {email,password,newpass} = req.body;
+        const user = await User.findOne({where:{email:email}});
+        const shop = await Shop.findOne({where:{email:email}});
+        if((!user)&&(!shop))
+            throw new Error('user does not exists please signup');
+        if(user)
+            isValidUser = await bcrypt.compare(password,user.password);
+        else if(shop)
+            isValidShop = await bcrypt.compare(password,shop.password);
+        if(isValidUser)
+            newUser = user;
+        else if(isValidShop)
+            newUser = shop;
+        if(newUser){
+            const hashedPw = await bcrypt.hash(newpass, 12);
+            await newUser.update({password:hashedPw});
+            return res.status(200).json({message:"password changed"});
+        }
+        throw new Error('wrong password');
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
