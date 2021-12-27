@@ -20,8 +20,11 @@ exports.verifyShop = async (req, res, next) => {
     try{
         const {shopName} = req.body;
         const shop = await Shop.findOne({where:{shopName:shopName}});
-        if(!shop)
-            throw new Error('this shop does not exists');
+        if(!shop){
+            const err= new Error('this shop does not exists');
+            err.statusCode=404;
+            throw err;
+        }
         await shop.update({isVerified:true});
         mailer.general_mail(shop.email,shop.name,'shop verification status','you are now a verified seller');
         return res.status(200).json({message:'verified'});

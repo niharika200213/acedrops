@@ -19,22 +19,30 @@ exports.createProduct = async (req, res, next) => {
         await Category.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}]);
         if(!validationResult(req).isEmpty()){
             clearImg(req.images);
-            throw new Error(validationResult(req).errors[0].msg);
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
         }
         if(req.type!=="shop"){
             clearImg(req.images);
-            throw new Error('shop does not exists'); 
+            const err= new Error('shop does not exists'); 
+            err.statusCode=404;
+            throw err;
         }
         const shop = req.user;
         if(!shop.isVerified){
             clearImg(req.images);
-            throw new Error('please fill application form and wait for verification');
+            const err= new Error('please fill application form and wait for verification');
+            err.statusCode=400;
+            throw err;
         }
         const {stock,title,description,price,offers,category} = req.body;
         const prodCategory = await Category.findOne({where:{category:category}});
         if(!prodCategory){
             clearImg(req.images);
-            throw new Error('this category does not exists');
+            const err= new Error('this category does not exists');
+            err.statusCode=400;
+            throw err;
         }
         const newProd = await product.create({stock:stock,title:title,description:description,
             price:price,offers:offers,shopId:shop.id});
