@@ -88,7 +88,7 @@ exports.signup_verify = async (req, res, next) => {
                 process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
             await Token.create({token:refreshtoken,email:email});
             res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
-                access_token:accesstoken,refresh_token:refreshtoken});
+                access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id});
         }
         else
             throw new Error('wrong otp');
@@ -140,9 +140,9 @@ exports.login = async (req,res,next) => {
             else
                 await Token.create({token:refreshtoken,email:email});
             return res.status(200).json({name:newUser.name, email:email,
-                access_token:accesstoken,refresh_token:refreshtoken});
+                access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
         }
-        throw new Error('wrong password');
+        throw new Error('wrong password', { statusCode: 401 });
     }
     catch(err){
         if(!err.statusCode)
@@ -173,7 +173,7 @@ exports.googleLogin = async (req,res,next) => {
         else
             await Token.create({token:refreshtoken,email:req.user.email});
         return res.status(200).json({access_token:accesstoken, name:newUser.name, email:newUser.email,
-            refresh_token:refreshtoken});
+            refresh_token:refreshtoken,id:newUser.id});
     }
     catch(err){
         if(!err.statusCode)
@@ -200,7 +200,7 @@ exports.googleSignup = async (req,res,next) => {
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
         await Token.create({token:refreshtoken,email:newUser.email});
         res.status(200).json({message:'signup successful',name:newUser.name, email:newUser.email,
-        access_token:accesstoken,refresh_token:refreshtoken});
+        access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError')
@@ -371,7 +371,7 @@ exports.changePass = async (req,res,next) => {
             await newUser.update({password:hashedPw});
             return res.status(200).json({message:"password changed"});
         }
-        throw new Error('wrong password');
+        throw new Error('wrong password', { statusCode: 401 });
     }
     catch(err){
         if(!err.statusCode)

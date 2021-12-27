@@ -5,6 +5,8 @@ require('dotenv/config');
 const path = require('path');
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
+const prodRoutes = require('./routes/product');
+const adminRoutes = require('./routes/admin');
 const sequelize = require('./utils/db');
 const Sequelize = require('sequelize');
 
@@ -16,7 +18,7 @@ const imgUrl = require('./models/imgUrl');
 const order_item = require('./models/order_item');
 const order = require('./models/order');
 const otp = require('./models/otp');
-const products = require('./models/products');
+const product = require('./models/product');
 const reviews = require('./models/reviews');
 const shop = require('./models/shop');
 const token = require('./models/token');
@@ -35,6 +37,8 @@ app.use(cors({
 }));
 app.use('/auth',authRoutes);
 app.use('/shop',shopRoutes);
+app.use('/prod',prodRoutes);
+app.use('/admin',adminRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
 app.use(express.static(path.join(__dirname,'images')));
 
@@ -45,48 +49,46 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message});
 });
 
-shop.hasMany(products);
-products.belongsTo(shop);
+shop.hasMany(product);
+product.belongsTo(shop,{foreignKey:"shopId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
 shop.hasMany(imgUrl);
-imgUrl.belongsTo(shop,{constraints:true});
-products.hasMany(imgUrl);
-imgUrl.belongsTo(products);
+imgUrl.belongsTo(shop,{foreignKey:"shopId",constraints:true,onUpdate:"cascade",onDelete:"cascade"});
+product.hasMany(imgUrl);
+imgUrl.belongsTo(product,{foreignKey:"productId",constraints: false,onUpdate:"cascade",onDelete:"cascade"});
 
-user.belongsToMany(products, {through:fav});
-products.belongsToMany(user, {through:fav});
+user.belongsToMany(product, {through:fav,constraints: false});
+product.belongsToMany(user, {through:fav,constraints: false});
 
-user.belongsToMany(products, {through:reviews});
-products.belongsToMany(user, {through:reviews});
+user.belongsToMany(product, {through:reviews,constraints: false});
+product.belongsToMany(user, {through:reviews,constraints: false});
 
-user.belongsToMany(products, {through:viewed});
-products.belongsToMany(user, {through:viewed});
+user.belongsToMany(product, {through:viewed,constraints: false});
+product.belongsToMany(user, {through:viewed,constraints: false});
 
 user.hasOne(cart);
-cart.belongsTo(user);
+cart.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
 user.hasMany(order);
-order.belongsTo(user);
+order.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
-order.belongsToMany(products, {through:order_item});
-products.belongsToMany(order, {through:order_item});
+order.belongsToMany(product, {through:order_item,constraints: false});
+product.belongsToMany(order, {through:order_item,constraints: false});
 
-cart.belongsToMany(products, {through:cart_item});
-products.belongsToMany(cart, {through:cart_item});
+cart.belongsToMany(product, {through:cart_item,constraints: false});
+product.belongsToMany(cart, {through:cart_item,constraints: false});
 
-categories.belongsToMany(products, {through:product_category});
-products.belongsToMany(categories,{through:product_category});
+categories.belongsToMany(product, {through:product_category,constraints: false});
+product.belongsToMany(categories,{through:product_category,constraints: false});
 
 user.hasMany(address);
-address.belongsTo(user);
+address.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
-order.hasOne(address);
+address.hasMany(order);
+order.belongsTo(address,{foreignKey:"addressId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
 sequelize.sync(
-  {force:true}
+  //{force:true}
   )
-.then(result=>{return categories.findByPk(1);})
-.then(category=>{if(!category)
-      return categories.bulkCreate({category:'jewellery'},{category:'bakery'},{category:'art'});})
 .then(category=>{app.listen(process.env.PORT||3000); console.log('result');})
 .catch(err=>{console.log(err);});
