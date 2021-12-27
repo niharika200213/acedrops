@@ -13,4 +13,6 @@ router.post('/createShopAdhaar', isAuth, uploadImg, shopController.createShopAdh
 
 router.post('/createShopSellerPic', isAuth, singleImg, shopController.createShopSellerPic);
 
+router.delete('/deleteShop', isAuth, shopController.deleteShop);
+
 module.exports = router;

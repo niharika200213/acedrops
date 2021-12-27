@@ -28,7 +28,7 @@ const product = sequelize.define(
             type: Sequelize.DOUBLE
         }
     }, {
-    tableName: 'products'
+    tableName: 'product'
 });
 
 module.exports = product;

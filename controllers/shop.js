@@ -43,6 +43,10 @@ exports.createShopAdhaarImg = async (req, res, next) => {
             clearImg(req.images);
             throw new Error(validationResult(req).errors[0].msg);
         }
+        if(req.images.length!==2){
+            clearImg(req.images);
+            throw new Error('please upload 2 images');
+        }
         if(req.type!=="shop"){
             clearImg(req.images);
             throw new Error('shop does not exists'); 
@@ -53,7 +57,7 @@ exports.createShopAdhaarImg = async (req, res, next) => {
             throw new Error('please fill personal information first');
         }
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
-        if(adhaar.length === 2){
+        if(adhaar.length > 0){
             clearImg(req.images);
             throw new Error('images already uploaded');
         }
@@ -84,7 +88,7 @@ exports.createShopSellerPic = async (req, res, next) => {
             throw new Error('please fill personal information first');
         }
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
-        if(adhaar.length !== 2){
+        if(adhaar.length < 2){
             clearImg(Array(req.image));
             throw new Error('update 2 adhaar card photos first');
         }
@@ -96,6 +100,27 @@ exports.createShopSellerPic = async (req, res, next) => {
         await imgUrl.create({imageUrl:req.image,purpose:'sellerPic',shopId:shop.id});
         await shop.update({isApplied:true});
         return res.status(200).json({message:'picture uploaded'});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.deleteShop = async (req, res, next) => {
+    try{
+        if(req.type!=="shop")
+            throw new Error('shop does not exists'); 
+        const shop = req.user;
+        let imgs = await imgUrl.findAll({where:{shopId:shop.id},attributes: ['imageUrl']});
+        imgs = JSON.parse(JSON.stringify(imgs));
+        console.log(imgs.imageUrl)
+        for(let i=0;i<imgs.length;++i){
+            
+            clearImg(imgs.imageUrl);}
+        await shop.destroy();
+        return res.status(200).json({message:'shop deleted'});
     }
     catch(err){
         if(!err.statusCode)
