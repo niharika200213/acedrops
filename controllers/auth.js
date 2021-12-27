@@ -3,7 +3,7 @@ const jwt=require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const otpgenerator=require('otp-generator'); 
 const moment=require("moment");
-const { Op } = require("sequelize");
+const { Op, Error } = require("sequelize");
 
 const User = require('../models/user');
 const Token=require('../models/token');
@@ -105,11 +105,9 @@ exports.signup_verify = async (req, res, next) => {
             res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
                 access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id});
         }
-        else{
-            const err = new Error('wrong otp');
-            err.statusCode=401;
-            throw err;
-        }
+        const err = new Error('wrong otp');
+        err.statusCode=401;
+        throw err;
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError')
@@ -273,8 +271,13 @@ exports.logout = async (req,res,next) => {
     try{
         const { refreshToken } = req.body;
         const tokenInDb = await Token.findOne({where:{token:refreshToken}});
-        await tokenInDb.destroy();
-        return res.status(200).json({message:'logged out'});
+        if(tokenInDb){
+            await tokenInDb.destroy();
+            return res.status(200).json({message:'logged out'});
+        }
+        const err = new Error('error logging out');
+        err.statusCode=400;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
