@@ -23,12 +23,21 @@ module.exports = (req,res,next) => {
         let upload = multer({ storage: storage, fileFilter: imageFilter }).single('image');
         upload(req, res, async function(err) {
             try{
-                if (req.fileValidationError)
-                throw new Error('format not supported or limit exceeded');
-                else if (!req.file)
-                    throw new Error('Please select an image to upload');
-                else if (err||err instanceof multer.MulterError)
-                    throw new Error(err);
+                if (req.fileValidationError){
+                    const err= new Error('format not supported or limit exceeded');
+                    err.statusCode=400;
+                    throw err;
+                }
+                else if (!req.file){
+                    const err= new Error('Please select an image to upload');
+                    err.statusCode=400;
+                    throw err;
+                }
+                else if (err||err instanceof multer.MulterError){
+                    const err= new Error(err);
+                    err.statusCode=400;
+                    throw err;
+                }
                 req.image=req.file.filename;
                 next();
             }

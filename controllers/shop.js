@@ -14,16 +14,28 @@ const clearImg = imgArray => {
 
 exports.createShopInfo = async (req, res, next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
-        if(req.type!=="shop")
-            throw new Error('shop does not exists'); 
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
+        if(req.type!=="shop"){
+            const err = new Error('shop does not exists');
+            err.statusCode=404;
+            throw err; 
+        }
         const {shopName,phno,noOfMembers,dob,description,address,fathersName,aadhaarNo} = req.body;
-        if(!validator.isValidNumber(aadhaarNo))
-            throw new Error('aadhaar number is not valid');
+        if(!validator.isValidNumber(aadhaarNo)){
+            const err = new Error('aadhaar number is not valid');
+            err.statusCode=401;
+            throw err; 
+        }
         const shop = req.user;
-        if(shop.shopName)
-            throw new Error('shop already exists');
+        if(shop.shopName){
+            const err = new Error('shop already exists');
+            err.statusCode=400;
+            throw err; 
+        }
         await shop.update({shopName:shopName,phno:phno,dob:dob,noOfMembers:noOfMembers,description:description,
             address:address,fathersName:fathersName,aadhaarNo:aadhaarNo});
         return res.status(200).json({message:'personal information updated'});
@@ -41,25 +53,35 @@ exports.createShopAdhaarImg = async (req, res, next) => {
     try{
         if(!validationResult(req).isEmpty()){
             clearImg(req.images);
-            throw new Error(validationResult(req).errors[0].msg);
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
         }
         if(req.images.length!==2){
             clearImg(req.images);
-            throw new Error('please upload 2 images');
+            const err= new Error('please upload 2 images');
+            err.statusCode=401;
+            throw err; 
         }
         if(req.type!=="shop"){
             clearImg(req.images);
-            throw new Error('shop does not exists'); 
+            const err= new Error('shop does not exists');
+            err.statusCode=404;
+            throw err;  
         }
         const shop = req.user;
         if(!shop.shopName){
             clearImg(req.images);
-            throw new Error('please fill personal information first');
+            const err= new Error('please fill personal information first');
+            err.statusCode=401;
+            throw err; 
         }
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
         if(adhaar.length > 0){
             clearImg(req.images);
-            throw new Error('images already uploaded');
+            const err= new Error('images already uploaded');
+            err.statusCode=401;
+            throw err; 
         }
         for(let i=0;i<req.images.length;++i)
             await imgUrl.create({imageUrl:req.images[i],purpose:'adhaar',shopId:shop.id});
@@ -76,26 +98,36 @@ exports.createShopSellerPic = async (req, res, next) => {
     try{
         if(!validationResult(req).isEmpty()){
             clearImg(Array(req.image));
-            throw new Error(validationResult(req).errors[0].msg);
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
         }
         if(req.type!=="shop"){
             clearImg(Array(req.image));
-            throw new Error('shop does not exists'); 
+            const err= new Error('shop does not exists'); 
+            err.statusCode=404;
+            throw err; 
         }
         const shop = req.user;
         if(!shop.shopName){
             clearImg(Array(req.image));
-            throw new Error('please fill personal information first');
+            const err = new Error('please fill personal information first');
+            err.statusCode=400;
+            throw err; 
         }
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
         if(adhaar.length < 2){
             clearImg(Array(req.image));
-            throw new Error('update 2 adhaar card photos first');
+            const err= new Error('update 2 adhaar card photos first');
+            err.statusCode=400;
+            throw err; 
         }
         const sellerPic = await imgUrl.findOne({where:{purpose:'sellerPic',shopId:shop.id}});
         if(sellerPic){
             clearImg(Array(req.image));
-            throw new Error('picture already uploaded');
+            const err= new Error('picture already uploaded');
+            err.statusCode=400;
+            throw err; 
         }
         await imgUrl.create({imageUrl:req.image,purpose:'sellerPic',shopId:shop.id});
         await shop.update({isApplied:true});
@@ -110,8 +142,11 @@ exports.createShopSellerPic = async (req, res, next) => {
 
 exports.deleteShop = async (req, res, next) => {
     try{
-        if(req.type!=="shop")
-            throw new Error('shop does not exists'); 
+        if(req.type!=="shop"){
+            const err= new Error('shop does not exists'); 
+            err.statusCode=404;
+            throw err;
+        }
         const shop = req.user;
         let imgs = await imgUrl.findAll({where:{shopId:shop.id},attributes: ['imageUrl']});
         imgs = JSON.parse(JSON.stringify(imgs));

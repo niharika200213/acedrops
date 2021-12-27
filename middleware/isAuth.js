@@ -24,8 +24,11 @@ module.exports = async (req, res, next) => {
                             req.user = shopData;
                             req.type = 'shop';
                         }
-                        else
-                            throw new Error('please signup');
+                        else{
+                            const err= new Error('please signup');
+                            err.statusCode=400;
+                            throw err;
+                        }
                     }
                     next();
                 } 

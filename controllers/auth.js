@@ -14,15 +14,21 @@ const mailer=require('../helpers/mailer');
 
 exports.signup = async (req, res, next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
 
         const {name,email}=req.body;
 
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
-        if(user||shop)
-            throw new Error('this email already exists');
+        if(user||shop){
+            const err = new Error('this email already exists');
+            err.statusCode=400;
+            throw err;
+        }
         
         const otp=otpgenerator.generate(6, {digits:true, lowerCaseAlphabets:false,
             upperCaseAlphabets:false, specialChars:false});
@@ -53,18 +59,27 @@ exports.signup_verify = async (req, res, next) => {
             second :date.getSeconds(),millisecond:date.getMilliseconds()}).format().replace('T',' ');
         await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
 
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         const {email,name,password,otp,isShop} = req.body;
 
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
-        if(user||shop)
-            throw new Error('this email already exists');
+        if(user||shop){
+            const err = new Error('this email already exists');
+            err.statusCode=400;
+            throw err;
+        }
 
         const otpInDb = await Otp.findOne({where:{email:email}});
-        if(!otpInDb)
-            throw new Error('otp expired');
+        if(!otpInDb){
+            const err = new Error('otp expired');
+            err.statusCode=404;
+            throw err;
+        }
 
         if(otpInDb.otp===otp){
             if(!isShop)
@@ -90,8 +105,11 @@ exports.signup_verify = async (req, res, next) => {
             res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
                 access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id});
         }
-        else
-            throw new Error('wrong otp');
+        else{
+            const err = new Error('wrong otp');
+            err.statusCode=401;
+            throw err;
+        }
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError')
@@ -104,14 +122,20 @@ exports.signup_verify = async (req, res, next) => {
 
 exports.login = async (req,res,next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         let isValidUser,isValidShop,accesstoken,refreshtoken,newUser;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
+        if((!user)&&(!shop)){
+            const err = new Error('user does not exists please signup');
+            err.statusCode=404;
+            throw err;
+        }
         if(user)
             isValidUser = await bcrypt.compare(password,user.password);
         else if(shop)
@@ -142,7 +166,9 @@ exports.login = async (req,res,next) => {
             return res.status(200).json({name:newUser.name, email:email,
                 access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
         }
-        throw new Error('wrong password', { statusCode: 401 });
+        const err = new Error('wrong password');
+        err.statusCode=401;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
@@ -156,8 +182,11 @@ exports.googleLogin = async (req,res,next) => {
         let newUser;
         const user = await User.findOne({where:{email:req.user.email}});
         const shop = await Shop.findOne({where:{email:req.user.email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
+        if((!user)&&(!shop)){
+            const err = new Error('user does not exists please signup');
+            err.statusCode = 404;
+            throw err;
+        }
         if(user)
             newUser = user;
         else if(shop)
@@ -187,8 +216,11 @@ exports.googleSignup = async (req,res,next) => {
         let newUser;
         const user = await User.findOne({where:{email:req.user.email}});
         const shop = await Shop.findOne({where:{email:req.user.email}});
-        if(user||shop)
-            throw new Error('this email already exists');
+        if(user||shop){
+            const err = new Error('this email already exists');
+            err.statusCode =400;
+            throw err;
+        }
         const {isShop} = req.body;
         if(!isShop)
             newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
@@ -214,11 +246,17 @@ exports.googleSignup = async (req,res,next) => {
 exports.generate_access_token = async (req,res,next) => {
     try{
         const {refreshtoken} = req.body;
-        if(!refreshtoken)
-            throw new Error('token missing');
+        if(!refreshtoken){
+            const err = new Error('token missing');
+            err.statusCode=401;
+            throw err;
+        }
         const tokenInDb = await Token.findOne({where:{token:refreshtoken}});
-        if(!tokenInDb)
-            throw new Error('login again');
+        if(!tokenInDb){
+            const err = new Error('login again');
+            err.statusCode=401;
+            throw err;
+        }
         const payload = jwt.verify(tokenInDb.token, process.env.JWT_KEY_REFRESH);
         const accessToken = jwt.sign({id:payload.id,email:payload.email}, 
             process.env.JWT_KEY_ACCESS, {expiresIn: "10m"});
@@ -247,14 +285,20 @@ exports.logout = async (req,res,next) => {
 
 exports.forgotPass = async (req,res,next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         let newUser;
         const {email} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
+        if((!user)&&(!shop)){
+            const err = new Error('user does not exists please signup');
+            err.statusCode =404;
+            throw err;
+        }
         if(user)
             newUser = user;
         else if(shop)
@@ -279,8 +323,11 @@ exports.forgotPass = async (req,res,next) => {
 
 exports.forgotPassVerify = async (req,res,next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         const {otp,email} = req.body;
         let date = new Date(Date.now()-300000);
         date = moment({year:date.getFullYear(),month:date.getMonth(),
@@ -289,15 +336,20 @@ exports.forgotPassVerify = async (req,res,next) => {
         await Otp.destroy({where:{updatedAt:{[Op.lt]:date}}});
 
         const otpInDb = await Otp.findOne({where:{[Op.and]:[{otp:otp},{email:email}]}});
-        if(!otpInDb)
-            throw new Error('otp expired or wrong otp');
+        if(!otpInDb){
+            const err = new Error('otp expired or wrong otp');
+            err.statusCode=401;
+            throw err;
+        }
 
         if(otpInDb.purpose==="forgot password")
         {
             await otpInDb.update({purpose:"forgot password verified"});
             return res.status(200).json({message:'correct otp'});
         }
-        throw new Error('try again');
+        const err = new Error('try again');
+        err.statusCode=400;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
@@ -308,8 +360,11 @@ exports.forgotPassVerify = async (req,res,next) => {
 
 exports.newpass = async (req,res,next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         
         let date = new Date(Date.now()-300000);
         date = moment({year:date.getFullYear(),month:date.getMonth(),
@@ -320,8 +375,11 @@ exports.newpass = async (req,res,next) => {
         const {email,newpass} = req.body;
         const otpInDb = await Otp.findOne({where:{[Op.and]:
             [{purpose:"forgot password verified"},{email:email}]}});
-        if(!otpInDb)
-            throw new Error('session expired');
+        if(!otpInDb){
+            const err = new Error('session expired');
+            err.statusCode=401;
+            throw err;
+        }
         const user = await User.findOne({where:{email:email}});
         if(user){
             const hashedPw = await bcrypt.hash(newpass, 12);
@@ -339,7 +397,9 @@ exports.newpass = async (req,res,next) => {
                 return res.status(200).json({message:"password changed"});
             }
         }
-        throw new Error('try again');
+        const err= new Error('try again');
+        err.statusCode=400;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
@@ -350,14 +410,20 @@ exports.newpass = async (req,res,next) => {
 
 exports.changePass = async (req,res,next) => {
     try{
-        if(!validationResult(req).isEmpty())
-            throw new Error(validationResult(req).errors[0].msg);
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         let isValidUser,isValidShop,newUser;
         const {email,password,newpass} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
-        if((!user)&&(!shop))
-            throw new Error('user does not exists please signup');
+        if((!user)&&(!shop)){
+            const err= new Error('user does not exists please signup');
+            err.statusCode=404;
+            throw err;
+        }
         if(user)
             isValidUser = await bcrypt.compare(password,user.password);
         else if(shop)
@@ -371,7 +437,9 @@ exports.changePass = async (req,res,next) => {
             await newUser.update({password:hashedPw});
             return res.status(200).json({message:"password changed"});
         }
-        throw new Error('wrong password', { statusCode: 401 });
+        const err = new Error('wrong password');
+        err.statusCode=401;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
