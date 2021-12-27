@@ -17,8 +17,6 @@ router.post('/signup',[
         .not()
         .isEmpty()
         .withMessage('please enter your name')
-        .isAlphanumeric()
-        .withMessage('please enter a valid name')
         .isLength({ max: 50 })
         .withMessage('name is too long!! only 50 characters are allowed')
     ], authController.signup);
@@ -34,8 +32,6 @@ router.post('/signup/verify',[
         .not()
         .isEmpty()
         .withMessage('please enter your name')
-        .isAlphanumeric()
-        .withMessage('please enter a valid name')
         .isLength({ max: 50 })
         .withMessage('name is too long!! only 50 characters are allowed'),
     body('password')
