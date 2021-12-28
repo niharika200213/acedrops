@@ -52,7 +52,7 @@ exports.createProduct = async (req, res, next) => {
         return res.status(200).json({message:'product created'});
     }
     catch(err){
-        if(err.name==='SequelizeUniqueConstraintError')
+        if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError')
             next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
