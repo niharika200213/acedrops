@@ -37,7 +37,7 @@ exports.createShopInfo = async (req, res, next) => {
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError'){
-            err.statusCode=422;
+            err.errors[0].statusCode=422;
             next(err.errors[0]);
         }
         if(!err.statusCode)
