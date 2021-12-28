@@ -11,6 +11,7 @@ const Otp=require('../models/otp');
 const Shop=require('../models/shop');
 
 const mailer=require('../helpers/mailer');
+const imgUrl = require("../models/imgUrl");
 
 exports.signup = async (req, res, next) => {
     try{
@@ -125,7 +126,7 @@ exports.login = async (req,res,next) => {
             err.statusCode=422;
             throw err;
         }
-        let isValidUser,isValidShop,accesstoken,refreshtoken,newUser;
+        let isValidUser,isValidShop,accesstoken,refreshtoken,newUser,status=-1;
         const {email,password} = req.body;
         const user = await User.findOne({where:{email:email}});
         const shop = await Shop.findOne({where:{email:email}});
@@ -148,6 +149,17 @@ exports.login = async (req,res,next) => {
         }
         else if(isValidShop)
         {
+            if(shop.isApplied)
+                status=3;
+            else{
+                const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
+                if(adhar)
+                    status=2;
+                else if(shop.shopName)
+                    status=1;
+                else 
+                    status=0;
+            }
             newUser = shop;
             accesstoken=jwt.sign({id:shop.id,email:email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
@@ -161,7 +173,7 @@ exports.login = async (req,res,next) => {
                 await tokenInDb.update({token:refreshtoken});
             else
                 await Token.create({token:refreshtoken,email:email});
-            return res.status(200).json({name:newUser.name, email:email,
+            return res.status(200).json({status:status,name:newUser.name,email:email,
                 access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
         }
         const err = new Error('wrong password');
@@ -177,7 +189,7 @@ exports.login = async (req,res,next) => {
 
 exports.googleLogin = async (req,res,next) => {
     try{
-        let newUser;
+        let newUser,status=-1;
         const user = await User.findOne({where:{email:req.user.email}});
         const shop = await Shop.findOne({where:{email:req.user.email}});
         if((!user)&&(!shop)){
@@ -187,8 +199,20 @@ exports.googleLogin = async (req,res,next) => {
         }
         if(user)
             newUser = user;
-        else if(shop)
-            newUser = shop;            
+        else if(shop){
+            newUser = shop;  
+            if(shop.isApplied)
+                status=3;
+            else{
+                const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
+                if(adhar)
+                    status=2;
+                else if(shop.shopName)
+                    status=1;
+                else 
+                    status=0;
+            } 
+        }         
         const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
         const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
@@ -199,8 +223,8 @@ exports.googleLogin = async (req,res,next) => {
             await tokenInDb.update({token:refreshtoken});
         else
             await Token.create({token:refreshtoken,email:req.user.email});
-        return res.status(200).json({access_token:accesstoken, name:newUser.name, email:newUser.email,
-            refresh_token:refreshtoken,id:newUser.id});
+        return res.status(200).json({status:status,access_token:accesstoken,name:newUser.name,
+            email:newUser.email,refresh_token:refreshtoken,id:newUser.id});
     }
     catch(err){
         if(!err.statusCode)

@@ -14,11 +14,6 @@ const clearImg = imgArray => {
 
 exports.createShopInfo = async (req, res, next) => {
     try{
-        if(!validationResult(req).isEmpty()){
-            const err = new Error(validationResult(req).errors[0].msg);
-            err.statusCode=422;
-            throw err;
-        }
         if(req.type!=="shop"){
             const err = new Error('shop does not exists');
             err.statusCode=404;
@@ -51,12 +46,6 @@ exports.createShopInfo = async (req, res, next) => {
 
 exports.createShopAdhaarImg = async (req, res, next) => {
     try{
-        if(!validationResult(req).isEmpty()){
-            clearImg(req.images);
-            const err = new Error(validationResult(req).errors[0].msg);
-            err.statusCode=422;
-            throw err;
-        }
         if(req.images.length!==2){
             clearImg(req.images);
             const err= new Error('please upload 2 images');
@@ -96,12 +85,6 @@ exports.createShopAdhaarImg = async (req, res, next) => {
 
 exports.createShopSellerPic = async (req, res, next) => {
     try{
-        if(!validationResult(req).isEmpty()){
-            clearImg(Array(req.image));
-            const err = new Error(validationResult(req).errors[0].msg);
-            err.statusCode=422;
-            throw err;
-        }
         if(req.type!=="shop"){
             clearImg(Array(req.image));
             const err= new Error('shop does not exists'); 
@@ -132,30 +115,6 @@ exports.createShopSellerPic = async (req, res, next) => {
         await imgUrl.create({imageUrl:req.image,purpose:'sellerPic',shopId:shop.id});
         await shop.update({isApplied:true});
         return res.status(200).json({message:'picture uploaded'});
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.deleteShop = async (req, res, next) => {
-    try{
-        if(req.type!=="shop"){
-            const err= new Error('shop does not exists'); 
-            err.statusCode=404;
-            throw err;
-        }
-        const shop = req.user;
-        let imgs = await imgUrl.findAll({where:{shopId:shop.id},attributes: ['imageUrl']});
-        imgs = JSON.parse(JSON.stringify(imgs));
-        console.log(imgs.imageUrl)
-        for(let i=0;i<imgs.length;++i){
-            
-            clearImg(imgs.imageUrl);}
-        await shop.destroy();
-        return res.status(200).json({message:'shop deleted'});
     }
     catch(err){
         if(!err.statusCode)
