@@ -9,4 +9,6 @@ const router = express.Router();
 
 router.post('/createProduct', isAuth, uploadImg, productController.createProduct);
 
+router.get('/getAllProds', productController.getAllProducts);
+
 module.exports = router;

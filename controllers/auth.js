@@ -187,32 +187,40 @@ exports.login = async (req,res,next) => {
     }
 };
 
-exports.googleLogin = async (req,res,next) => {
+exports.googleSignup = async (req,res,next) => {
     try{
         let newUser,status=-1;
-        const user = await User.findOne({where:{email:req.user.email}});
-        const shop = await Shop.findOne({where:{email:req.user.email}});
-        if((!user)&&(!shop)){
-            const err = new Error('user does not exists please signup');
-            err.statusCode = 404;
-            throw err;
-        }
-        if(user)
+        const {isShop} = req.body;
+        if(!isShop){
+            const user = await User.findOne({where:{email:req.user.email}});
             newUser = user;
-        else if(shop){
+        }
+        else if(isShop){
+            const shop = await Shop.findOne({where:{email:req.user.email}});
             newUser = shop;  
-            if(shop.isApplied)
-                status=3;
-            else{
-                const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
-                if(adhar)
-                    status=2;
-                else if(shop.shopName)
-                    status=1;
-                else 
-                    status=0;
-            } 
-        }         
+            if(shop){    
+                if(shop.isApplied)
+                    status=3;
+                else{
+                    const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
+                    if(adhar)
+                        status=2;
+                    else if(shop.shopName)
+                        status=1;
+                    else 
+                        status=0;
+                } 
+            }
+        }     
+        if(!newUser){
+            if(!isShop)
+                newUser = await User.create({name:req.user.name,
+                    email:req.user.email,googleId:req.user.googleId});
+            else if(isShop)
+                newUser = await Shop.create({name:req.user.name,
+                    email:req.user.email,googleId:req.user.googleId});
+        
+        }   
         const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
         const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
@@ -227,38 +235,6 @@ exports.googleLogin = async (req,res,next) => {
             email:newUser.email,refresh_token:refreshtoken,id:newUser.id});
     }
     catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
-exports.googleSignup = async (req,res,next) => {
-    try{
-        let newUser;
-        const user = await User.findOne({where:{email:req.user.email}});
-        const shop = await Shop.findOne({where:{email:req.user.email}});
-        if(user||shop){
-            const err = new Error('this email already exists');
-            err.statusCode =400;
-            throw err;
-        }
-        const {isShop} = req.body;
-        if(!isShop)
-            newUser = await User.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
-        else if(isShop)
-            newUser = await Shop.create({name:req.user.name,email:req.user.email,googleId:req.user.googleId});
-        const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
-        const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
-            process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
-        await Token.create({token:refreshtoken,email:newUser.email});
-        res.status(200).json({message:'signup successful',name:newUser.name, email:newUser.email,
-        access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
-    }
-    catch(err){
-        if(err.name==='SequelizeUniqueConstraintError')
-            next(err.errors[0]);
         if(!err.statusCode)
             err.statusCode=500;
         next(err);

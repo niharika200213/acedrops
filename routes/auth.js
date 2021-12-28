@@ -65,8 +65,6 @@ router.post('/login', [
         .withMessage('password must be at-max 50 characters long'),
     ],authController.login);
 
-router.post('/loginGoogle', isAuthGoogle, authController.googleLogin);
-
 router.post('/signupGoogle', isAuthGoogle, authController.googleSignup);
 
 router.post('/forgotPass', [
