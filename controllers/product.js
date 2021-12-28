@@ -59,3 +59,15 @@ exports.createProduct = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.getAllProducts = async (req, res, next) => {
+    try{
+        const prods = await product.findAll();
+        return res.status(200).json(prods);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};

@@ -36,8 +36,10 @@ exports.createShopInfo = async (req, res, next) => {
         return res.status(200).json({message:'personal information updated'});
     }
     catch(err){
-        if(err.name==='SequelizeUniqueConstraintError')
+        if(err.name==='SequelizeUniqueConstraintError'){
+            err.statusCode=422;
             next(err.errors[0]);
+        }
         if(!err.statusCode)
             err.statusCode=500;
         next(err);
