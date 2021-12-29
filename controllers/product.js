@@ -63,6 +63,7 @@ exports.createProduct = async (req, res, next) => {
 exports.getAllProducts = async (req, res, next) => {
     try{
         const prods = await product.findAll();
+        //const images = await imgUrl.findAll({where:{productId:}})
         return res.status(200).json(prods);
     }
     catch(err){
