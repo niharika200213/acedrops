@@ -1,5 +1,5 @@
 const {OAuth2Client} = require('google-auth-library');
-const client = new OAuth2Client(CLIENT_ID);
+const client = new OAuth2Client(process.env.CLIENT_ID);
 
 module.exports = async (req, res, next) => {
     try{
