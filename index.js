@@ -8,7 +8,6 @@ const shopRoutes = require('./routes/shop');
 const prodRoutes = require('./routes/product');
 const adminRoutes = require('./routes/admin');
 const sequelize = require('./utils/db');
-const Sequelize = require('sequelize');
 
 const cart_item = require('./models/cart_item');
 const cart = require('./models/cart');
@@ -40,7 +39,6 @@ app.use('/shop',shopRoutes);
 app.use('/prod',prodRoutes);
 app.use('/admin',adminRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
-app.use(express.static(path.join(__dirname,'images')));
 
 app.use((error, req, res, next) => {
   console.log(error);
