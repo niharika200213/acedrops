@@ -1,16 +1,25 @@
 const {OAuth2Client} = require('google-auth-library');
-const client = new OAuth2Client(process.env.CLIENT_ID);
+const clientUser = new OAuth2Client(process.env.CLIENT_ID_USER);
+const clientShop = new OAuth2Client(process.env.CLIENT_ID_SHOP);
 
 module.exports = async (req, res, next) => {
     try{
-        const {token} = req.body;
-        const user = {};
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.CLIENT_ID  
-        });
+        const {token,isShop} = req.body;
+        let user = {};
+        let ticket;
+        if(isShop){
+            ticket = await clientShop.verifyIdToken({
+                idToken: token,
+                audience: process.env.CLIENT_ID_SHOP 
+            });
+        }
+        else{
+            ticket = await clientUser.verifyIdToken({
+                idToken: token,
+                audience: process.env.CLIENT_ID_USER 
+            });
+        }
         const payload = ticket.getPayload();
-        console.log(payload);
         user.name = payload.name;
         user.email = payload.email;
         user.googleId = payload.sub;

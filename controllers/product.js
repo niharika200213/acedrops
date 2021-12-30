@@ -5,7 +5,7 @@ const path=require('path');
 const fs=require('fs');
 const product=require('../models/product');
 const product_category=require('../models/product_category');
-const Category=require('../models/categories');
+const categories = require('../models/categories');
 
 const clearImg = imgArray => {
     for(let i=0; i<imgArray.length; ++i){
@@ -16,7 +16,8 @@ const clearImg = imgArray => {
 
 exports.createProduct = async (req, res, next) => {
     try{
-        await Category.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}]);
+        await categories.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}],
+            {ignoreDuplicates:true});
         if(!validationResult(req).isEmpty()){
             clearImg(req.images);
             const err = new Error(validationResult(req).errors[0].msg);
@@ -37,7 +38,7 @@ exports.createProduct = async (req, res, next) => {
             throw err;
         }
         const {stock,title,description,price,offers,category} = req.body;
-        const prodCategory = await Category.findOne({where:{category:category}});
+        const prodCategory = await categories.findOne({where:{category:category}});
         if(!prodCategory){
             clearImg(req.images);
             const err= new Error('this category does not exists');
@@ -62,9 +63,22 @@ exports.createProduct = async (req, res, next) => {
 
 exports.getAllProducts = async (req, res, next) => {
     try{
-        const prods = await product.findAll();
-        const images = await imgUrl.findAll({ group: 'name' });
-        return res.status(200).json(prods);
+        let prods={},prodArray=new Array();
+        const products = await product.findAll({raw:true});
+        for(let i=0;i<products.length;++i){
+            const images = await imgUrl.findAll({where:{productId:products[i].id},raw:true});
+            const categoryId = await product_category.findOne({where:{productId:products[i].id},
+                attributes:['categoryId'],raw:true});
+            console.log(categoryId.categoryId)
+            const category = await categories.findOne({where:{id:categoryId.categoryId},
+                attributes:['category'],raw:true});
+            console.log(category.category)
+            prods.product=products[i];
+            prods.images=images;
+            prods.category=category.category;
+            prodArray.push(JSON.parse(JSON.stringify(prods)));
+        }
+        return res.status(200).json(prodArray);
     }
     catch(err){
         if(!err.statusCode)

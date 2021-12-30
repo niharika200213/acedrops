@@ -53,7 +53,7 @@ shop.hasMany(product);
 product.belongsTo(shop,{foreignKey:"shopId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 
 shop.hasMany(imgUrl);
-imgUrl.belongsTo(shop,{foreignKey:"shopId",constraints:true,onUpdate:"cascade",onDelete:"cascade"});
+imgUrl.belongsTo(shop,{foreignKey:"shopId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
 product.hasMany(imgUrl);
 imgUrl.belongsTo(product,{foreignKey:"productId",constraints: false,onUpdate:"cascade",onDelete:"cascade"});
 
