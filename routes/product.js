@@ -9,4 +9,6 @@ router.post('/createProduct', isAuth, productController.createProduct);
 
 router.get('/getAllProds', productController.getAllProducts);
 
+router.get('/home', productController.home);
+
 module.exports = router;
