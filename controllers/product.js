@@ -7,8 +7,9 @@ const categories = require('../models/categories');
 
 exports.createProduct = async (req, res, next) => {
     try{
-        await categories.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}],
-            {ignoreDuplicates:true});
+        const cat = await categories.findOne();
+        if(!cat)
+            await categories.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}]);
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
@@ -31,7 +32,7 @@ exports.createProduct = async (req, res, next) => {
             price:price,offers:offers,shopId:shop.id});
         await product_category.create({productId:newProd.id,categoryId:prodCategory.id});
         for(let i=0;i<images.length;++i)
-            await imgUrl.create({imageUrl:images[i],purpose:'product',productId:newProd.id,shopId:shop.id});
+            await newProd.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
         return res.status(200).json({message:'product created'});
     }
     catch(err){
@@ -51,16 +52,42 @@ exports.getAllProducts = async (req, res, next) => {
             const images = await imgUrl.findAll({where:{productId:products[i].id},raw:true});
             const categoryId = await product_category.findOne({where:{productId:products[i].id},
                 attributes:['categoryId'],raw:true});
-            console.log(categoryId.categoryId)
             const category = await categories.findOne({where:{id:categoryId.categoryId},
                 attributes:['category'],raw:true});
-            console.log(category.category)
             prods.product=products[i];
             prods.images=images;
             prods.category=category.category;
             prodArray.push(JSON.parse(JSON.stringify(prods)));
         }
         return res.status(200).json(prodArray);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.home = async (req, res, next) => {
+    try{
+        let response = {}, products = {}, final = new Array();
+        const category = await categories.findAll({raw:true});
+        for(let i=0;i<category.length;++i){
+            const productId = await product_category.findAll({where:{categoryId:category[i].id},
+                attributes:['productId'],raw:true,limit:4});
+            response.category=category[i].category;
+            response.products=new Array();
+            for(let j=0;j<productId.length;++j){
+                const prod = await product.findOne({where:{id:productId[j].productId},raw:true});
+                products.product = prod;
+                const images = await imgUrl.findAll({where:{productId:prod.id},raw:true});
+                products.images = images;
+                response.products.push(JSON.parse(JSON.stringify(products)));
+            }
+            final.push(JSON.parse(JSON.stringify(response)));
+        }
+        
+        return res.status(200).json(final);
     }
     catch(err){
         if(!err.statusCode)

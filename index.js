@@ -47,13 +47,13 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message});
 });
 
-shop.hasMany(product);
-product.belongsTo(shop,{foreignKey:"shopId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
+shop.hasMany(product,{foreignKey:"shopId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+product.belongsTo(shop);
 
-shop.hasMany(imgUrl);
-imgUrl.belongsTo(shop,{foreignKey:"shopId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
-product.hasMany(imgUrl);
-imgUrl.belongsTo(product,{foreignKey:"productId",constraints: false,onUpdate:"cascade",onDelete:"cascade"});
+shop.hasMany(imgUrl,{foreignKey:"shopId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+imgUrl.belongsTo(shop);
+product.hasMany(imgUrl,{foreignKey:"productId",constraints: false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+imgUrl.belongsTo(product);
 
 user.belongsToMany(product, {through:fav,constraints: false});
 product.belongsToMany(user, {through:fav,constraints: false});
@@ -64,11 +64,11 @@ product.belongsToMany(user, {through:reviews,constraints: false});
 user.belongsToMany(product, {through:viewed,constraints: false});
 product.belongsToMany(user, {through:viewed,constraints: false});
 
-user.hasOne(cart);
-cart.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
+user.hasOne(cart,{foreignKey:"userId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+cart.belongsTo(user);
 
-user.hasMany(order);
-order.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
+user.hasMany(order,{foreignKey:"userId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+order.belongsTo(user);
 
 order.belongsToMany(product, {through:order_item,constraints: false});
 product.belongsToMany(order, {through:order_item,constraints: false});
@@ -79,11 +79,11 @@ product.belongsToMany(cart, {through:cart_item,constraints: false});
 categories.belongsToMany(product, {through:product_category,constraints: false});
 product.belongsToMany(categories,{through:product_category,constraints: false});
 
-user.hasMany(address);
-address.belongsTo(user,{foreignKey:"userId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
+user.hasMany(address,{foreignKey:"userId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+address.belongsTo(user);
 
-address.hasMany(order);
-order.belongsTo(address,{foreignKey:"addressId",constraints:false,onUpdate:"cascade",onDelete:"cascade"});
+address.hasMany(order,{foreignKey:"addressId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
+order.belongsTo(address);
 
 sequelize.sync(
   //{force:true}

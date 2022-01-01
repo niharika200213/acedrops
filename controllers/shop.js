@@ -108,14 +108,3 @@ exports.createShopSellerPic = async (req, res, next) => {
         next(err);
     }
 };
-
-exports.getAllShops = async (req, res, next) => {
-    try{
-
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
