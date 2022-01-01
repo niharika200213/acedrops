@@ -33,9 +33,9 @@ module.exports = async (req, res, next) => {
                     next();
                 } 
                 else if (err.message === "jwt expired")
-                    return res.status(400).json({message: "Access token expired"});
+                    return res.status(403).json({message: "Access token expired"});
                 else 
-                    return res.status(403).json({message: "User not authenticated" });
+                    return res.status(402).json({message: "User not authenticated" });
             }
             catch(err){
                 if(!err.statusCode)

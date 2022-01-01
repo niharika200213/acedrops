@@ -32,7 +32,7 @@ exports.createProduct = async (req, res, next) => {
             price:price,offers:offers,shopId:shop.id});
         await product_category.create({productId:newProd.id,categoryId:prodCategory.id});
         for(let i=0;i<images.length;++i)
-            await imgUrl.create({imageUrl:images[i],purpose:'product',productId:newProd.id,shopId:shop.id});
+            await newProd.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
         return res.status(200).json({message:'product created'});
     }
     catch(err){

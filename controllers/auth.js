@@ -252,7 +252,7 @@ exports.generate_access_token = async (req,res,next) => {
         const tokenInDb = await Token.findOne({where:{token:refreshtoken}});
         if(!tokenInDb){
             const err = new Error('login again');
-            err.statusCode=401;
+            err.statusCode=402;
             throw err;
         }
         const payload = jwt.verify(tokenInDb.token, process.env.JWT_KEY_REFRESH);
