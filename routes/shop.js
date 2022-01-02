@@ -11,4 +11,8 @@ router.post('/createShopAdhaar', isAuth, shopController.createShopAdhaarImg);
 
 router.post('/createShopSellerPic', isAuth, shopController.createShopSellerPic);
 
+router.post('/coverPic', isAuth, shopController.coverPic);
+
+router.get('/viewOneShop/:shopId', shopController.viewOneShop);
+
 module.exports = router;

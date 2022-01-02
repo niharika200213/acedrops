@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.post('/createProduct', isAuth, productController.createProduct);
 
-router.get('/getAllProds', productController.getAllProducts);
-
 router.get('/home', productController.home);
+
+router.get('/viewProd/:prodId', productController.viewOneProd);
 
 module.exports = router;

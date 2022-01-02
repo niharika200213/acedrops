@@ -2,6 +2,8 @@ const { validationResult } = require('express-validator');
 const validator = require('aadhaar-validator');
 
 const imgUrl=require('../models/imgUrl');
+const shop = require('../models/shop');
+const product = require('../models/product');
 
 exports.createShopInfo = async (req, res, next) => {
     try{
@@ -23,7 +25,7 @@ exports.createShopInfo = async (req, res, next) => {
             throw err; 
         }
         await shop.update({shopName:shopName,phno:phno,dob:dob,noOfMembers:noOfMembers,description:description,
-            address:address,fathersName:fathersName,aadhaarNo:aadhaarNo});
+            address:address,fathersName:fathersName,aadhaarNo:aadhaarNo,status:1});
         return res.status(200).json({message:'personal information updated'});
     }
     catch(err){
@@ -64,6 +66,7 @@ exports.createShopAdhaarImg = async (req, res, next) => {
         }
         for(let i=0;i<images.length;++i)
             await imgUrl.create({imageUrl:images[i],purpose:'adhaar',shopId:shop.id});
+        await shop.update({status:2});
         return res.status(200).json({message:'adhaar card updated'});
     }
     catch(err){
@@ -99,8 +102,48 @@ exports.createShopSellerPic = async (req, res, next) => {
             throw err; 
         }
         await imgUrl.create({imageUrl:req.body.image,purpose:'sellerPic',shopId:shop.id});
-        await shop.update({isApplied:true});
+        await shop.update({isApplied:true,status:3});
         return res.status(200).json({message:'picture uploaded'});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.coverPic = async (req, res, next) => {
+    try{
+        if(req.type!=="shop"){
+            const err= new Error('shop does not exists'); 
+            err.statusCode=404;
+            throw err; 
+        }
+        const shop = req.user;
+        if(!shop.isApplied){
+            const err = new Error('please fill personal information first');
+            err.statusCode=400;
+            throw err; 
+        }
+        await shop.createImgUrl({imageUrl:req.body.image,purpose:'coverPic'});
+        return res.status(200).json({message:'picture uploaded'});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.viewOneShop = async (req, res, next) => {
+    try{
+        const shopId = req.params.shopId;
+        const Shop = await shop.findOne({where:{id:shopId},attributes:['id','shopName','description'],
+        include:[
+            {model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl']},
+            {model:product,include:[{model:imgUrl,attributes:['imageUrl']}]}
+            ]});
+        return res.status(200).json(Shop);
     }
     catch(err){
         if(!err.statusCode)

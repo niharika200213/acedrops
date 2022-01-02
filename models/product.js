@@ -20,12 +20,15 @@ const product = sequelize.define(
             type: Sequelize.TEXT,
             allowNull: false
         },
-        price: {
+        basePrice: {
             type: Sequelize.INTEGER,
             allowNull: false
         },
+        discountedPrice: {
+            type: Sequelize.INTEGER
+        },
         offers: {
-            type: Sequelize.DOUBLE
+            type: Sequelize.STRING
         }
     }, {
     tableName: 'product'

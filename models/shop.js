@@ -59,6 +59,10 @@ const shop = sequelize.define(
         isApplied: {
             type: Sequelize.BOOLEAN,
             defaultValue: false
+        },
+        status:{
+            type: Sequelize.INTEGER,
+            defaultValue: 0
         }
     }, {
     tableName: 'shop'
