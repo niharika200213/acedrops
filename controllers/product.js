@@ -6,8 +6,8 @@ const product=require('../models/product');
 const product_category=require('../models/product_category');
 const categories = require('../models/categories');
 const shop = require('../models/shop');
-const cart = require('../models/cart');
-const cart_item = require('../models/cart_item');
+const fav = require('../models/fav');
+const user = require('../models/user');
 
 exports.createProduct = async (req, res, next) => {
     try{
@@ -114,7 +114,6 @@ exports.addToCart = async (req, res, next) => {
         if(prodInCart.length>0)
             prod = prodInCart[0];
         if(prod){
-            console.log(prod);
             const oldQuantity = prod.cart_item.quantity;
             newQuantity = oldQuantity+1;
             await cart.addProduct(prod,{through:{quantity:newQuantity}});
@@ -122,8 +121,15 @@ exports.addToCart = async (req, res, next) => {
         }
         else{
             let prodInDb = await product.findByPk(prodId);
-            await cart.addProduct(prodInDb,{through:{quantity:newQuantity}});
-            await cart.increment({price:prodInDb.discountedPrice});
+            if(prodInDb){
+                await cart.addProduct(prodInDb,{through:{quantity:newQuantity}});
+                await cart.increment({price:prodInDb.discountedPrice});
+            }
+            else{
+                const err= new Error('product does not exists'); 
+                err.statusCode=400;
+                throw err;
+            }
         }
         return res.status(200).json({price:cart.price,quantity:newQuantity});
     }
@@ -188,6 +194,56 @@ exports.viewCart = async (req, res, next) => {
         const prodInCart = await cart.getProducts({include:
             [{model:imgUrl,attributes:['imageUrl']}]});
         return res.status(200).json(prodInCart);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.addAndRemFav = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot add to wishlist'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const prod = await product.findByPk(req.body.prodId);
+        if(prod){
+            favInDb = await fav.findOne({where:{userId:req.user.id,productId:req.body.prodId}});
+            if(favInDb){
+                await favInDb.destroy();
+                return res.status(200).send('removed from wishlist');
+            }
+            else{
+                await fav.create({userId:req.user.id,productId:req.body.prodId});
+                return res.status(200).send('added to wishlist');
+            }
+        }
+        else{
+            const err= new Error('product does not exists'); 
+            err.statusCode=400;
+            throw err;
+        }
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.viewWishlist = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot view wishlist'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const result = await user.findAll({include:[{model:product,include:
+            [{model:imgUrl,attributes:['imageUrl']}]}]});
+        return res.status(200).json(result);
     }
     catch(err){
         if(!err.statusCode)
