@@ -13,4 +13,8 @@ router.get('/viewProd/:prodId', productController.viewOneProd);
 
 router.get('/category/:category', productController.categoryWise);
 
+router.post('/addToCart', isAuth, productController.addToCart);
+
+router.post('/removeFromCart', isAuth, productController.removeFromCart);
+
 module.exports = router;

@@ -25,7 +25,8 @@ const product = sequelize.define(
             allowNull: false
         },
         discountedPrice: {
-            type: Sequelize.INTEGER
+            type: Sequelize.INTEGER,
+            allowNull: false
         },
         offers: {
             type: Sequelize.STRING

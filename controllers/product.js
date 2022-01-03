@@ -6,6 +6,8 @@ const product=require('../models/product');
 const product_category=require('../models/product_category');
 const categories = require('../models/categories');
 const shop = require('../models/shop');
+const cart = require('../models/cart');
+const cart_item = require('../models/cart_item');
 
 exports.createProduct = async (req, res, next) => {
     try{
@@ -88,6 +90,80 @@ exports.viewOneProd = async (req, res, next) => {
         const prod = await product.findOne({where:{id:prodId},
             include:[{model:imgUrl,attributes:['imageUrl']}]});
         return res.status(200).send(prod);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.addToCart = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot add to cart'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const {prodId} = req.body;
+        let prod,newQuantity=1;
+        let cart = await req.user.getCart();
+        if(!cart)
+            cart = await req.user.createCart({price:0});
+        const prodInCart = await cart.getProducts({where:{id:prodId}});
+        if(prodInCart.length>0)
+            prod = prodInCart[0];
+        if(prod){
+            console.log(prod);
+            const oldQuantity = prod.cart_item.quantity;
+            newQuantity = oldQuantity+1;
+            await cart.addProduct(prod,{through:{quantity:newQuantity}});
+            await cart.increment({price:prod.discountedPrice});
+        }
+        else{
+            let prodInDb = await product.findByPk(prodId);
+            await cart.addProduct(prodInDb,{through:{quantity:newQuantity}});
+            await cart.increment({price:prodInDb.discountedPrice});
+        }
+        return res.status(200).json({price:cart.price,quantity:newQuantity});
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.removeFromCart = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot add to cart'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const {prodId} = req.body;
+        let prod,newQuantity=1;
+        let cart = await req.user.getCart();
+        if(!cart){
+            const err= new Error('no products to remove'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const prodInCart = await cart.getProducts({where:{id:prodId}});
+        if(prodInCart.length>0)
+            prod = prodInCart[0];
+        if(prod){
+            const oldQuantity = prod.cart_item.quantity;
+            newQuantity = oldQuantity-1;
+            await cart.addProduct(prod,{through:{quantity:newQuantity}});
+            await cart.increment({price:-prod.discountedPrice});
+            return res.status(200).json({price:cart.price,quantity:newQuantity});
+        }
+        else{
+            const err= new Error('no products to remove'); 
+            err.statusCode=400;
+            throw err;
+        }
     }
     catch(err){
         if(!err.statusCode)
