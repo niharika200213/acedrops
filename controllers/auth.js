@@ -149,18 +149,8 @@ exports.login = async (req,res,next) => {
         }
         else if(isValidShop)
         {
-            if(shop.isApplied)
-                status=3;
-            else{
-                const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
-                if(adhar)
-                    status=2;
-                else if(shop.shopName)
-                    status=1;
-                else 
-                    status=0;
-            }
             newUser = shop;
+            status=shop.status;
             accesstoken=jwt.sign({id:shop.id,email:email},
             process.env.JWT_KEY_ACCESS,{expiresIn:"10m"});
             refreshtoken=jwt.sign({id:shop.id,email:email},
@@ -198,19 +188,8 @@ exports.googleSignup = async (req,res,next) => {
         else if(isShop){
             const shop = await Shop.findOne({where:{email:req.user.email}});
             newUser = shop;  
-            if(shop){    
-                if(shop.isApplied)
-                    status=3;
-                else{
-                    const adhar=await imgUrl.findOne({where:{[Op.and]:[{shopId:shop.id},{purpose:'adhaar'}]}});
-                    if(adhar)
-                        status=2;
-                    else if(shop.shopName)
-                        status=1;
-                    else 
-                        status=0;
-                } 
-            }
+            if(shop)
+                status=shop.status;
         }     
         if(!newUser){
             if(!isShop)
