@@ -140,7 +140,7 @@ exports.viewOneShop = async (req, res, next) => {
         const shopId = req.params.shopId;
         const Shop = await shop.findOne({where:{id:shopId},attributes:['id','shopName','description'],
         include:[
-            {model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl']},
+            {model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl'],required:false},
             {model:product,include:[{model:imgUrl,attributes:['imageUrl']}]}
             ]});
         return res.status(200).json(Shop);
