@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator');
-const sequelize = require('../utils/db');
+const Sequelize = require('sequelize');
 
 const imgUrl=require('../models/imgUrl');
 const product=require('../models/product');
@@ -51,11 +51,13 @@ exports.home = async (req, res, next) => {
         const category = await categories.findAll({include:[
             {model:product,include:
                 [{model:imgUrl,attributes:['imageUrl']}]}]});
-        const Shop = await shop.findAll({attributes:['id','shopName','description'],
-            limit:4,order:sequelize.random(),include:[
-            {model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl']}
-        ]});
-        return res.status(200).json({category,Shop});
+        const Shop = await shop.findAll({attributes:['id','shopName','description'],limit:4,
+                order:[Sequelize.fn('RANDOM')],
+            include:[{model:imgUrl,attributes:['imageUrl'],where:{purpose:'coverPic'},required:false}]});
+        const newArrival = await product.findAll({limit:4,include:[{
+            model:imgUrl,attributes:['imageUrl']
+        }],order:[['createdAt','DESC']]});
+        return res.status(200).json({category,Shop,newArrival});
     }
     catch(err){
         if(!err.statusCode)
