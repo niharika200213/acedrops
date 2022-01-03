@@ -171,3 +171,27 @@ exports.removeFromCart = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.viewCart = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot add to cart'); 
+            err.statusCode=400;
+            throw err;
+        }
+        let cart = await req.user.getCart();
+        if(!cart){
+            const err= new Error('no products in cart'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const prodInCart = await cart.getProducts({include:
+            [{model:imgUrl,attributes:['imageUrl']}]});
+        return res.status(200).json(prodInCart);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};

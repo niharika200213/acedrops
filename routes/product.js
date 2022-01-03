@@ -17,4 +17,6 @@ router.post('/addToCart', isAuth, productController.addToCart);
 
 router.post('/removeFromCart', isAuth, productController.removeFromCart);
 
+router.get('/viewCart', isAuth, productController.viewCart);
+
 module.exports = router;
