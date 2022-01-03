@@ -11,4 +11,6 @@ router.get('/home', productController.home);
 
 router.get('/viewProd/:prodId', productController.viewOneProd);
 
+router.get('/category/:category', productController.categoryWise);
+
 module.exports = router;

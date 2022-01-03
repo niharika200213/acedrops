@@ -66,6 +66,22 @@ exports.home = async (req, res, next) => {
     }
 };
 
+exports.categoryWise = async (req, res, next) => {
+    try{
+        let category = req.params.category;
+        category = category.trim().toLowerCase();
+        const result = await categories.findOne({where:{category:category},include:[
+            {model:product,include:
+                [{model:imgUrl,attributes:['imageUrl']}]}]});
+        return res.status(200).send(result);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
 exports.viewOneProd = async (req, res, next) => {
     try{
         const prodId = req.params.prodId;
