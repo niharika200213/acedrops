@@ -7,7 +7,7 @@ const product_category=require('../models/product_category');
 const categories = require('../models/categories');
 const shop = require('../models/shop');
 const fav = require('../models/fav');
-const user = require('../models/user');
+const { Op, Error } = require("sequelize");
 
 exports.createProduct = async (req, res, next) => {
     try{
@@ -241,9 +241,11 @@ exports.viewWishlist = async (req, res, next) => {
             err.statusCode=400;
             throw err;
         }
-        const result = await user.findAll({include:[{model:product,include:
-            [{model:imgUrl,attributes:['imageUrl']}]}]});
-        return res.status(200).json(result);
+        const result = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
+        const prodIds = result.map((result) => result.productId);
+        const prods = await product.findAll({include:[{model:imgUrl,attributes:['imageUrl']}],
+            where:{id:{[Op.in]:prodIds}}});
+        return res.status(200).json(prods);
     }
     catch(err){
         if(!err.statusCode)
