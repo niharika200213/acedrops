@@ -7,4 +7,6 @@ const router = express.Router();
 
 router.get('/search', userControllers.search);
 
+router.post('/reviews/:prodId', isAuth, userControllers.rate);
+
 module.exports = router;

@@ -9,12 +9,10 @@ const review = sequelize.define(
             allowNull: false
         },
         review: {
-            type: Sequelize.TEXT,
-            allowNull: false
+            type: Sequelize.TEXT
         },
         rating: {
-            type: Sequelize.INTEGER,
-            defaultValue: 0
+            type: Sequelize.INTEGER
         }
     }, {
     tableName: 'review'
