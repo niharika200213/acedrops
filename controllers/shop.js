@@ -7,6 +7,11 @@ const product = require('../models/product');
 
 exports.createShopInfo = async (req, res, next) => {
     try{
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         if(req.type!=="shop"){
             const err = new Error('shop does not exists');
             err.statusCode=404;
@@ -41,6 +46,11 @@ exports.createShopInfo = async (req, res, next) => {
 
 exports.createShopAdhaarImg = async (req, res, next) => {
     try{
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         const {images} = req.body;
         if(images.length!==2){
             const err= new Error('please upload 2 images');
@@ -78,6 +88,11 @@ exports.createShopAdhaarImg = async (req, res, next) => {
 
 exports.createShopSellerPic = async (req, res, next) => {
     try{
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
@@ -114,6 +129,11 @@ exports.createShopSellerPic = async (req, res, next) => {
 
 exports.coverPic = async (req, res, next) => {
     try{
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
