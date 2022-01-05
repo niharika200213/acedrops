@@ -190,3 +190,16 @@ exports.orderProd = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.getOrders = async (req, res, next) => {
+    try{
+        const orders = await req.user.getOrders({include:[{model:product,include:
+            [{model:imgUrl,attributes:['imageUrl']}]}]});
+        return res.status(200).send(orders);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};

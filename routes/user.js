@@ -19,4 +19,6 @@ router.post('/orderCart', isAuth, userControllers.orderCart);
 
 router.post('/orderProd', isAuth, userControllers.orderProd);
 
+router.get('/getOrders', isAuth, userControllers.getOrders);
+
 module.exports = router;
