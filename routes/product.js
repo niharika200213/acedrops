@@ -9,7 +9,7 @@ router.post('/createProduct', isAuth, productController.createProduct);
 
 router.get('/home', productController.home);
 
-router.get('/viewProd/:prodId', productController.viewOneProd);
+router.get('/viewProd/:prodId', isAuth, productController.viewOneProd);
 
 router.get('/category/:category', productController.categoryWise);
 

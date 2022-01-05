@@ -7,6 +7,7 @@ const product_category=require('../models/product_category');
 const categories = require('../models/categories');
 const shop = require('../models/shop');
 const fav = require('../models/fav');
+const reviews = require('../models/reviews');
 const { Op, Error } = require("sequelize");
 
 exports.createProduct = async (req, res, next) => {
@@ -87,9 +88,25 @@ exports.categoryWise = async (req, res, next) => {
 exports.viewOneProd = async (req, res, next) => {
     try{
         const prodId = req.params.prodId;
+        let reviewsAndRatings,userReview,rating;
         const prod = await product.findOne({where:{id:prodId},
-            include:[{model:imgUrl,attributes:['imageUrl']}]});
-        return res.status(200).send(prod);
+            include:[{model:imgUrl,attributes:['imageUrl']},
+            {model:shop,attributes:['shopName']}]});
+        if(prod){
+            reviewsAndRatings = await reviews.findAll({where:{[Op.and]:[{productId:prodId},
+                {[Op.not]:[{userId:req.user.id}]}]}});
+            console.log(reviewsAndRatings);
+            userReview = await reviews.findOne({where:{[Op.and]:[{productId:prodId},
+                {userId:req.user.id}]}});
+            console.log(userReview);
+            const count = await reviews.count({where:{rating:{[Op.gt]:0}}});
+            const sum = await reviews.sum('rating');
+            rating = sum/count;
+            return res.status(200).json({prod,userReview,reviewsAndRatings,rating});
+        }
+        const err= new Error('product not found'); 
+        err.statusCode=400;
+        throw err;
     }
     catch(err){
         if(!err.statusCode)
