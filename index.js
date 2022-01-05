@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const prodRoutes = require('./routes/product');
 const adminRoutes = require('./routes/admin');
+const userRoutes = require('./routes/user');
 const sequelize = require('./utils/db');
 
 const cart_item = require('./models/cart_item');
@@ -37,6 +38,7 @@ app.use(cors({
 app.use('/auth',authRoutes);
 app.use('/shop',shopRoutes);
 app.use('/prod',prodRoutes);
+app.use('/user',userRoutes);
 app.use('/admin',adminRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
 
