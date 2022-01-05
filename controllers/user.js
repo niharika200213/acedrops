@@ -4,7 +4,7 @@ const imgUrl=require('../models/imgUrl');
 const shop = require('../models/shop');
 const product = require('../models/product');
 const categories = require('../models/categories');
-const { Op, Error } = require("sequelize");
+const { Op, Error, NUMBER, INTEGER } = require("sequelize");
 const order = require('../models/order');
 const order_item = require('../models/order_item');
 const cart_item = require('../models/cart_item');
@@ -175,8 +175,9 @@ exports.orderProd = async (req, res, next) => {
         }
         const prod = await product.findByPk(prodId);
         if(prod){
-            await req.user.createOrder({price:prod.price*quantity,addressId:addr.id});
-            prod.order_item = {quantity:quantity};
+            const price = prod.discountedPrice*quantity;
+            const orderedProd = await req.user.createOrder({price:price,addressId:addr.id});
+            await order_item.create({quantity:quantity,orderId:orderedProd.id,productId:prod.id});
             return res.status(200).send('order placed');
         }
         const err= new Error('something went wrong'); 
