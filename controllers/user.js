@@ -158,3 +158,34 @@ exports.orderCart = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.orderProd = async (req, res, next) => {
+    try{
+        if(!req.user.phno){
+            const err= new Error('add phone number'); 
+            err.statusCode=401;
+            throw err;   
+        }
+        const {addressId,quantity,prodId} = req.body;
+        const addr = await address.findOne({where:{[Op.and]:[{id:addressId},{userId:req.user.id}]}});
+        if(!addr){
+            const err= new Error('add address'); 
+            err.statusCode=402;
+            throw err;
+        }
+        const prod = await product.findByPk(prodId);
+        if(prod){
+            await req.user.createOrder({price:prod.price*quantity,addressId:addr.id});
+            prod.order_item = {quantity:quantity};
+            return res.status(200).send('order placed');
+        }
+        const err= new Error('something went wrong'); 
+        err.statusCode=400;
+        throw err;
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
