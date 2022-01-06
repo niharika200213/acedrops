@@ -140,11 +140,19 @@ exports.orderCart = async (req, res, next) => {
             if(products.length){
                 const userOrder = await req.user.createOrder({price:cart.price,addressId:addr.id});
                 await userOrder.addProducts(products.map(prod => {
-                    prod.order_item = {quantity:prod.cart_item.quantity};
+                    if(prod.stock-prod.cart_item.quantity < 0){
+                        let updatedPrice = prod.discountedPrice*(prod.cart_item.quantity-prod.stock);
+                        userOrder.increment({price:-updatedPrice});
+                        prod.order_item = {quantity:prod.stock};
+                    }
+                    else
+                        prod.order_item = {quantity:prod.cart_item.quantity};
+                    prod.increment({stock:-prod.order_item.quantity});
                     return prod;
                 }));
                 await cart_item.destroy({where:{cartId:cart.id}});
                 await cart.destroy();
+                await order_item.destroy({where:{quantity:0}});
                 return res.status(200).send('order placed');
             }
         }
@@ -166,7 +174,7 @@ exports.orderProd = async (req, res, next) => {
             err.statusCode=401;
             throw err;   
         }
-        const {addressId,quantity,prodId} = req.body;
+        let {addressId,quantity,prodId} = req.body;
         const addr = await address.findOne({where:{[Op.and]:[{id:addressId},{userId:req.user.id}]}});
         if(!addr){
             const err= new Error('add address'); 
@@ -175,6 +183,15 @@ exports.orderProd = async (req, res, next) => {
         }
         const prod = await product.findByPk(prodId);
         if(prod){
+            if(prod.stock === 0){
+                const err= new Error('out of stock'); 
+                err.statusCode=400;
+                throw err;
+            }
+            if(prod.stock-quantity < 0)
+                quantity = prod.stock;
+            
+            await prod.increment({stock:-quantity});
             const price = prod.discountedPrice*quantity;
             const orderedProd = await req.user.createOrder({price:price,addressId:addr.id});
             await order_item.create({quantity:quantity,orderId:orderedProd.id,productId:prod.id});
