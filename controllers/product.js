@@ -178,8 +178,11 @@ exports.removeFromCart = async (req, res, next) => {
         if(prod){
             const oldQuantity = prod.cart_item.quantity;
             newQuantity = oldQuantity-1;
-            await cart.addProduct(prod,{through:{quantity:newQuantity}});
             await cart.increment({price:-prod.discountedPrice});
+            if(newQuantity===0)
+                cart.removeProduct(prod);
+            else
+                await cart.addProduct(prod,{through:{quantity:newQuantity}});
             return res.status(200).json({price:cart.price,quantity:newQuantity});
         }
         else{
@@ -198,7 +201,7 @@ exports.removeFromCart = async (req, res, next) => {
 exports.viewCart = async (req, res, next) => {
     try{
         if(req.type==='shop'){
-            const err= new Error('seller cannot add to cart'); 
+            const err= new Error('seller cannot view cart'); 
             err.statusCode=400;
             throw err;
         }
