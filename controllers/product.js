@@ -165,7 +165,7 @@ exports.addToCart = async (req, res, next) => {
 exports.removeFromCart = async (req, res, next) => {
     try{
         if(req.type==='shop'){
-            const err= new Error('seller cannot add to cart'); 
+            const err= new Error('seller cannot remove from cart'); 
             err.statusCode=400;
             throw err;
         }
@@ -189,6 +189,43 @@ exports.removeFromCart = async (req, res, next) => {
             else
                 await cart.addProduct(prod,{through:{quantity:newQuantity}});
             return res.status(200).json({price:cart.price,quantity:newQuantity});
+        }
+        else{
+            const err= new Error('no products to remove'); 
+            err.statusCode=400;
+            throw err;
+        }
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.deleteCartProd = async (req, res, next) => {
+    try{
+        if(req.type==='shop'){
+            const err= new Error('seller cannot remove from cart'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const {prodId} = req.body;
+        let prod;
+        let cart = await req.user.getCart();
+        if(!cart){
+            const err= new Error('no products to remove'); 
+            err.statusCode=400;
+            throw err;
+        }
+        const prodInCart = await cart.getProducts({where:{id:prodId}});
+        if(prodInCart.length>0)
+            prod = prodInCart[0];
+        if(prod){
+            const oldQuantity = prod.cart_item.quantity;
+            await cart.increment({price:-(prod.discountedPrice*oldQuantity)});
+            cart.removeProduct(prod);
+            return res.status(200).json({price:cart.price});
         }
         else{
             const err= new Error('no products to remove'); 
