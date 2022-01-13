@@ -10,6 +10,7 @@ const order_item = require('../models/order_item');
 const cart_item = require('../models/cart_item');
 const reviews = require('../models/reviews');
 const address = require('../models/address');
+const fav = require('../models/fav');
 
 exports.search = async (req, res, next) => {
     try{
@@ -22,13 +23,13 @@ exports.search = async (req, res, next) => {
         const categoryProds = await categories.findAll({where:{category:{[Op.iLike]:`%${toSearch}%`}},
             include:[{model:product,include:[{model:imgUrl,attributes:['imageUrl']}]}]});
 
-        const shops = await shop.findAll({where:{[Op.or]:[
+        const shops = await shop.findAll({where:{[Op.and]:[{isVerified:true},{[Op.or]:[
             {shopName:{[Op.iLike]:`%${toSearch}%`}},
             {description:{[Op.iLike]:`%${toSearch}%`}}
-            ]},include:[{model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl'],required:false}]
+            ]}]},include:[{model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl'],required:false}]
         });
-        
-        return res.status(200).json({products,categoryProds,shops});
+        const favProd = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
+        return res.status(200).json({products,categoryProds,shops,favProd});
     }
     catch(err){
         if(!err.statusCode)

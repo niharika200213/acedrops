@@ -9,8 +9,7 @@ const imgUrl = sequelize.define(
             allowNull: false
         },
         imageUrl: {
-            type: Sequelize.STRING,
-            defaultValue: 'default-image.jpg'
+            type: Sequelize.STRING
         },
         purpose: {
             type: Sequelize.STRING

@@ -54,13 +54,15 @@ exports.home = async (req, res, next) => {
         const category = await categories.findAll({include:[
             {model:product,include:
                 [{model:imgUrl,attributes:['imageUrl']}]}]});
-        const Shop = await shop.findAll({attributes:['id','shopName','description'],limit:4,
-                order:[Sequelize.fn('RANDOM')],
-            include:[{model:imgUrl,attributes:['imageUrl'],where:{purpose:'coverPic'},required:false}]});
+        const Shop = await shop.findAll({where:{isVerified:true},
+            attributes:['id','shopName','description'],limit:4,
+            order:[Sequelize.fn('RANDOM')],include:[{model:imgUrl,
+            attributes:['imageUrl'],where:{purpose:'coverPic'},required:false}]});
         const newArrival = await product.findAll({limit:4,include:[{
             model:imgUrl,attributes:['imageUrl']
         }],order:[['createdAt','DESC']]});
-        return res.status(200).json({category,Shop,newArrival});
+        const favProd = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
+        return res.status(200).json({category,Shop,newArrival,favProd});
     }
     catch(err){
         if(!err.statusCode)
@@ -76,7 +78,8 @@ exports.categoryWise = async (req, res, next) => {
         const result = await categories.findOne({where:{category:category},include:[
             {model:product,include:
                 [{model:imgUrl,attributes:['imageUrl']}]}]});
-        return res.status(200).send(result);
+        const favProd = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
+        return res.status(200).json({result,favProd});
     }
     catch(err){
         if(!err.statusCode)
@@ -88,21 +91,23 @@ exports.categoryWise = async (req, res, next) => {
 exports.viewOneProd = async (req, res, next) => {
     try{
         const prodId = req.params.prodId;
-        let reviewsAndRatings,userReview,rating;
+        let reviewsAndRatings,userReview,rating,isFav=false;
         const prod = await product.findOne({where:{id:prodId},
             include:[{model:imgUrl,attributes:['imageUrl']},
             {model:shop,attributes:['shopName']}]});
         if(prod){
             reviewsAndRatings = await reviews.findAll({where:{[Op.and]:[{productId:prodId},
                 {[Op.not]:[{userId:req.user.id}]}]}});
-            console.log(reviewsAndRatings);
             userReview = await reviews.findOne({where:{[Op.and]:[{productId:prodId},
                 {userId:req.user.id}]}});
-            console.log(userReview);
             const count = await reviews.count({where:{rating:{[Op.gt]:0}}});
             const sum = await reviews.sum('rating');
             rating = sum/count;
-            return res.status(200).json({prod,userReview,reviewsAndRatings,rating});
+            const favProd = await fav.findOne({where:{[Op.and]:[{productId:prodId},
+                {userId:req.user.id}]},attributes:['productId']});
+            if(favProd)
+                isFav=true;
+            return res.status(200).json({prod,userReview,reviewsAndRatings,rating,isFav});
         }
         const err= new Error('product not found'); 
         err.statusCode=400;
@@ -213,7 +218,8 @@ exports.viewCart = async (req, res, next) => {
         }
         const prodInCart = await cart.getProducts({include:
             [{model:imgUrl,attributes:['imageUrl']}]});
-        return res.status(200).json(prodInCart);
+        const favProd = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
+        return res.status(200).json({prodInCart,favProd});
     }
     catch(err){
         if(!err.statusCode)
@@ -234,11 +240,11 @@ exports.addAndRemFav = async (req, res, next) => {
             favInDb = await fav.findOne({where:{userId:req.user.id,productId:req.body.prodId}});
             if(favInDb){
                 await favInDb.destroy();
-                return res.status(200).send('removed from wishlist');
+                return res.status(200).send('0');
             }
             else{
                 await fav.create({userId:req.user.id,productId:req.body.prodId});
-                return res.status(200).send('added to wishlist');
+                return res.status(200).send('1');
             }
         }
         else{

@@ -2,16 +2,17 @@ const express = require('express');
 
 const productController = require('../controllers/product');
 const isAuth = require('../middleware/isAuth');
+const noAuth = require('../middleware/noAuth');
 
 const router = express.Router();
 
 router.post('/createProduct', isAuth, productController.createProduct);
 
-router.get('/home', productController.home);
+router.get('/home', noAuth, productController.home);
 
-router.get('/viewProd/:prodId', isAuth, productController.viewOneProd);
+router.get('/viewProd/:prodId', noAuth, productController.viewOneProd);
 
-router.get('/category/:category', productController.categoryWise);
+router.get('/category/:category', noAuth, productController.categoryWise);
 
 router.post('/addToCart', isAuth, productController.addToCart);
 
