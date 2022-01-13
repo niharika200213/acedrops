@@ -158,11 +158,7 @@ exports.login = async (req,res,next) => {
         }
         if(isValidShop||isValidUser)
         {
-            const tokenInDb = await Token.findOne({where:{email:email}});
-            if(tokenInDb)
-                await tokenInDb.update({token:refreshtoken});
-            else
-                await Token.create({token:refreshtoken,email:email});
+            await Token.create({token:refreshtoken,email:email});
             return res.status(200).json({status:status,name:newUser.name,email:email,
                 access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
         }
@@ -205,11 +201,7 @@ exports.googleSignup = async (req,res,next) => {
         const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
 
-        const tokenInDb = await Token.findOne({where:{email:req.user.email}});
-        if(tokenInDb)
-            await tokenInDb.update({token:refreshtoken});
-        else
-            await Token.create({token:refreshtoken,email:req.user.email});
+        await Token.create({token:refreshtoken,email:req.user.email});
         return res.status(200).json({status:status,access_token:accesstoken,name:newUser.name,
             email:newUser.email,refresh_token:refreshtoken,id:newUser.id});
     }
