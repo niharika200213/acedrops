@@ -18,6 +18,8 @@ router.post('/addToCart', isAuth, productController.addToCart);
 
 router.post('/removeFromCart', isAuth, productController.removeFromCart);
 
+router.post('/deleteCartProd', isAuth, productController.deleteCartProd);
+
 router.get('/viewCart', isAuth, productController.viewCart);
 
 router.post('/addAndRemFav', isAuth, productController.addAndRemFav);
