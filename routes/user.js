@@ -2,10 +2,11 @@ const express = require('express');
 
 const userControllers = require('../controllers/user');
 const isAuth = require('../middleware/isAuth');
+const noAuth = require('../middleware/noAuth');
 
 const router = express.Router();
 
-router.get('/search', userControllers.search);
+router.get('/search', noAuth, userControllers.search);
 
 router.post('/reviews/:prodId', isAuth, userControllers.rate);
 
