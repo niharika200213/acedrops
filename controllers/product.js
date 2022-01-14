@@ -153,7 +153,7 @@ exports.addToCart = async (req, res, next) => {
                 throw err;
             }
         }
-        return res.status(200).json({price:cart.price,quantity:newQuantity});
+        return res.status(200).json({price:cart.price,quantity:newQuantity,prodId:prodId});
     }
     catch(err){
         if(!err.statusCode)
@@ -188,7 +188,7 @@ exports.removeFromCart = async (req, res, next) => {
                 cart.removeProduct(prod);
             else
                 await cart.addProduct(prod,{through:{quantity:newQuantity}});
-            return res.status(200).json({price:cart.price,quantity:newQuantity});
+            return res.status(200).json({price:cart.price,quantity:newQuantity,prodId:prod.id});
         }
         else{
             const err= new Error('no products to remove'); 
@@ -225,7 +225,7 @@ exports.deleteCartProd = async (req, res, next) => {
             const oldQuantity = prod.cart_item.quantity;
             await cart.increment({price:-(prod.discountedPrice*oldQuantity)});
             cart.removeProduct(prod);
-            return res.status(200).json({price:cart.price});
+            return res.status(200).json({price:cart.price,prodId:prodId});
         }
         else{
             const err= new Error('no products to remove'); 
@@ -277,11 +277,11 @@ exports.addAndRemFav = async (req, res, next) => {
             favInDb = await fav.findOne({where:{userId:req.user.id,productId:req.body.prodId}});
             if(favInDb){
                 await favInDb.destroy();
-                return res.status(200).json('0');
+                return res.status(200).json({status:'0',prodId:prod.id});
             }
             else{
                 await fav.create({userId:req.user.id,productId:req.body.prodId});
-                return res.status(200).json('1');
+                return res.status(200).json({status:'1',prodId:prod.id});
             }
         }
         else{
