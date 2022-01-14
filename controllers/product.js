@@ -277,11 +277,11 @@ exports.addAndRemFav = async (req, res, next) => {
             favInDb = await fav.findOne({where:{userId:req.user.id,productId:req.body.prodId}});
             if(favInDb){
                 await favInDb.destroy();
-                return res.status(200).send('0');
+                return res.status(200).json('0');
             }
             else{
                 await fav.create({userId:req.user.id,productId:req.body.prodId});
-                return res.status(200).send('1');
+                return res.status(200).json('1');
             }
         }
         else{
