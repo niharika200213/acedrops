@@ -106,9 +106,11 @@ exports.signup_verify = async (req, res, next) => {
             res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
                 access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id});
         }
-        const err = new Error('wrong otp');
-        err.statusCode=401;
-        throw err;
+        else{
+            const err = new Error('wrong otp');
+            err.statusCode=401;
+            throw err;
+        }
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError')
