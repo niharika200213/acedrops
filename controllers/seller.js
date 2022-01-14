@@ -36,7 +36,7 @@ exports.updateProd = async (req, res, next) => {
         const {stock,title,description,basePrice,discountedPrice,offers} = req.body;
         await prod.update({stock:stock,title:title,description:description,basePrice:basePrice,
             discountedPrice:discountedPrice,offers:offers});
-        return res.status(200).send(prod);
+        return res.status(200).json(prod);
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError'){
@@ -70,7 +70,7 @@ exports.updateShop = async (req, res, next) => {
         const {shopName,noOfMembers,phno,description,address} = req.body;
         await Shop.update({shopName:shopName,noOfMembers:noOfMembers,phno:phno,
             description:description,address:address});
-        return res.status(200).send('updated successfully');
+        return res.status(200).json('updated successfully');
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError'){
@@ -91,7 +91,7 @@ exports.getProds = async (req, res, next) => {
             throw err;
         }
         const prods = await req.user.getProducts({include:[{model:imgUrl,attributes:['imageUrl']}]});
-        return res.status(200).send(prods);
+        return res.status(200).json(prods);
     }
     catch(err){
         if(!err.statusCode)
@@ -111,7 +111,7 @@ exports.getOrders = async (req, res, next) => {
             include:[{model:imgUrl,attributes:['imageUrl']},
                 {model:order,where:{status:'processing'},attributes:['id'],through:{where:{status:'processing'}},
                 include:[{model:address,attributes:{exclude:['createdAt','updatedAt']}}]}]});
-        return res.status(200).send(result);
+        return res.status(200).json(result);
     }
     catch(err){
         if(!err.statusCode)
@@ -131,7 +131,7 @@ exports.getPrevOrders = async (req, res, next) => {
             include:[{model:imgUrl,attributes:['imageUrl']},
                 {model:order,where:{status:['delivered','cancelled']},attributes:['id','status'],
                 include:[{model:address,attributes:{exclude:['createdAt','updatedAt']}}]}]});
-        return res.status(200).send(result);
+        return res.status(200).json(result);
     }
     catch(err){
         if(!err.statusCode)
@@ -161,7 +161,7 @@ exports.acceptOrder = async (req, res, next) => {
             throw err;
         }
         await orderItem.update({status:'accepted'});
-        return res.status(200).send('order accepted');
+        return res.status(200).json('order accepted');
     }
     catch(err){
         if(!err.statusCode)
@@ -191,7 +191,7 @@ exports.rejectOrder = async (req, res, next) => {
             throw err;
         }
         await orderItem.update({status:'rejected'});
-        return res.status(200).send('order rejected');
+        return res.status(200).json('order rejected');
     }
     catch(err){
         if(!err.statusCode)

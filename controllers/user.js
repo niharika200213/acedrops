@@ -52,7 +52,7 @@ exports.rate = async (req, res, next) => {
             [{userId:req.user.id,productId:prodId}]}});
         if(alreadyReviewed){
             await alreadyReviewed.update({review:review,rating:rating});
-            return res.status(200).send('done');
+            return res.status(200).json('done');
         }
         const orders = await order.findAll({where:{userId:req.user.id},attributes:['id']});
         if(orders.length>0){
@@ -72,7 +72,7 @@ exports.rate = async (req, res, next) => {
         }        
         else{
             await reviews.create({review:review,rating:rating,userId:req.user.id,productId:prodId});
-            return res.status(200).send('done');
+            return res.status(200).json('done');
         }
     }
     catch(err){
@@ -87,7 +87,7 @@ exports.addAddress = async (req, res, next) => {
         const {houseNo,streetOrPlotNo,locality,city,state} = req.body;
         await req.user.createAddress({houseNo:houseNo,streetOrPlotNo:streetOrPlotNo,
             locality:locality,city:city,state:state});
-        return res.status(200).send('information updated');
+        return res.status(200).json('information updated');
     }
     catch(err){
         if(!err.statusCode)
@@ -100,7 +100,7 @@ exports.addPhno = async (req, res, next) => {
     try{
         const {phno} = req.body;
         await req.user.update({phno:phno});
-        return res.status(200).send('information updated');
+        return res.status(200).json('information updated');
     }
     catch(err){
         if(!err.statusCode)
@@ -112,7 +112,7 @@ exports.addPhno = async (req, res, next) => {
 exports.getAddress = async (req, res, next) => {
     try{
         const addresses = await req.user.getAddresses();
-        return res.status(200).send(addresses);
+        return res.status(200).json(addresses);
     }
     catch(err){
         if(!err.statusCode)
@@ -154,7 +154,7 @@ exports.orderCart = async (req, res, next) => {
                 await cart_item.destroy({where:{cartId:cart.id}});
                 await cart.destroy();
                 await order_item.destroy({where:{quantity:0}});
-                return res.status(200).send('order placed');
+                return res.status(200).json('order placed');
             }
         }
         const err= new Error('something went wrong'); 
@@ -196,7 +196,7 @@ exports.orderProd = async (req, res, next) => {
             const price = prod.discountedPrice*quantity;
             const orderedProd = await req.user.createOrder({price:price,addressId:addr.id});
             await order_item.create({quantity:quantity,orderId:orderedProd.id,productId:prod.id});
-            return res.status(200).send('order placed');
+            return res.status(200).json('order placed');
         }
         const err= new Error('something went wrong'); 
         err.statusCode=400;
@@ -213,7 +213,7 @@ exports.getOrders = async (req, res, next) => {
     try{
         const orders = await req.user.getOrders({include:[{model:product,include:
             [{model:imgUrl,attributes:['imageUrl']}]}]});
-        return res.status(200).send(orders);
+        return res.status(200).json(orders);
     }
     catch(err){
         if(!err.statusCode)
@@ -232,7 +232,7 @@ exports.cancelOrder = async (req, res, next) => {
             throw err;
         }
         await orderCancel[0].update({status:'cancelled'});
-        return res.status(200).send(orderCancel);
+        return res.status(200).json(orderCancel);
     }
     catch(err){
         if(!err.statusCode)
