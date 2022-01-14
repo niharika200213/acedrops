@@ -5,6 +5,7 @@ require('dotenv/config');
 const path = require('path');
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
+const sellerRoutes = require('./routes/seller');
 const prodRoutes = require('./routes/product');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
@@ -39,6 +40,7 @@ app.use('/auth',authRoutes);
 app.use('/shop',shopRoutes);
 app.use('/prod',prodRoutes);
 app.use('/user',userRoutes);
+app.use('/seller',sellerRoutes);
 app.use('/admin',adminRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
 

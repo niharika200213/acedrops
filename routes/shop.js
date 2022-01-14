@@ -31,6 +31,4 @@ router.post('/coverPic', [
 
 router.get('/viewOneShop/:shopId', shopController.viewOneShop);
 
-
-
 module.exports = router;
