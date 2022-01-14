@@ -240,22 +240,3 @@ exports.cancelOrder = async (req, res, next) => {
         next(err);
     }
 };
-
-exports.contactOwner = async (req, res, next) => {
-    try{
-        const {shopId} = req.params;
-        const Shop = await shop.findOne({where:{id:shopId},attributes:['name','shopName',
-        'email','phno']});
-        if(!Shop){
-            const err= new Error('shop does not exists'); 
-            err.statusCode=400;
-            throw err;
-        }
-        return res.status(200).send(Shop);
-    }
-    catch(err){
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};

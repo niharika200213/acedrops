@@ -158,7 +158,8 @@ exports.coverPic = async (req, res, next) => {
 exports.viewOneShop = async (req, res, next) => {
     try{
         const shopId = req.params.shopId;
-        const Shop = await shop.findOne({where:{id:shopId},attributes:['id','shopName','description'],
+        const Shop = await shop.findOne({where:{id:shopId},attributes:['id','shopName','description',
+            'name','email','phno'],
         include:[
             {model:imgUrl,where:{purpose:"coverPic"},attributes:['imageUrl'],required:false},
             {model:product,include:[{model:imgUrl,attributes:['imageUrl']}]}
@@ -171,4 +172,3 @@ exports.viewOneShop = async (req, res, next) => {
         next(err);
     }
 };
-

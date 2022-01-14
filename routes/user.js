@@ -22,8 +22,6 @@ router.post('/orderProd', isAuth, userControllers.orderProd);
 
 router.post('/cancelOrder/:orderId', isAuth, userControllers.cancelOrder);
 
-router.get('/contactOwner/:shopId', userControllers.contactOwner);
-
 router.get('/getOrders', isAuth, userControllers.getOrders);
 
 module.exports = router;

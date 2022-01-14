@@ -11,6 +11,10 @@ const order_item = sequelize.define(
         quantity: {
             type: Sequelize.INTEGER,
             allowNull: false
+        },
+        status: {
+            type: Sequelize.STRING,
+            defaultValue: 'processing'
         }
     }, {
     tableName: 'order_item'
