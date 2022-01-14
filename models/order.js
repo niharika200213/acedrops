@@ -10,6 +10,10 @@ const order = sequelize.define(
         },
         price: {
             type: Sequelize.INTEGER
+        },
+        status: {
+            type: Sequelize.STRING,
+            defaultValue: 'processing'
         }
     }, {
     tableName: 'order'
