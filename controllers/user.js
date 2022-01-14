@@ -125,14 +125,14 @@ exports.orderCart = async (req, res, next) => {
     try{
         if(!req.user.phno){
             const err= new Error('add phone number'); 
-            err.statusCode=401;
+            err.statusCode=300;
             throw err;   
         }
         const {addressId} = req.body;
         const addr = await address.findOne({where:{[Op.and]:[{id:addressId},{userId:req.user.id}]}});
         if(!addr){
             const err= new Error('add address'); 
-            err.statusCode=402;
+            err.statusCode=301;
             throw err;
         }
         const cart = await req.user.getCart();
@@ -214,6 +214,44 @@ exports.getOrders = async (req, res, next) => {
         const orders = await req.user.getOrders({include:[{model:product,include:
             [{model:imgUrl,attributes:['imageUrl']}]}]});
         return res.status(200).send(orders);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.cancelOrder = async (req, res, next) => {
+    try{
+        const {orderId} = req.params;
+        const orderCancel = await req.user.getOrders({where:{id:orderId}});
+        if(orderCancel.length===0){
+            const err= new Error('order does not exists'); 
+            err.statusCode=400;
+            throw err;
+        }
+        await orderCancel[0].update({status:'cancelled'});
+        return res.status(200).send(orderCancel);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
+exports.contactOwner = async (req, res, next) => {
+    try{
+        const {shopId} = req.params;
+        const Shop = await shop.findOne({where:{id:shopId},attributes:['name','shopName',
+        'email','phno']});
+        if(!Shop){
+            const err= new Error('shop does not exists'); 
+            err.statusCode=400;
+            throw err;
+        }
+        return res.status(200).send(Shop);
     }
     catch(err){
         if(!err.statusCode)
