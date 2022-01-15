@@ -225,7 +225,7 @@ exports.deleteCartProd = async (req, res, next) => {
             const oldQuantity = prod.cart_item.quantity;
             await cart.increment({price:-(prod.discountedPrice*oldQuantity)});
             cart.removeProduct(prod);
-            return res.status(200).json({price:cart.price,prodId:prodId});
+            return res.status(200).json({price:cart.price,prodId:prod.id});
         }
         else{
             const err= new Error('no products to remove'); 

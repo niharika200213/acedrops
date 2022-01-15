@@ -231,8 +231,12 @@ exports.cancelOrder = async (req, res, next) => {
             err.statusCode=400;
             throw err;
         }
-        await orderCancel[0].update({status:'cancelled'});
-        return res.status(200).json(orderCancel);
+        if(orderCancel[0].status!=='delivered'){
+            await orderCancel[0].update({status:'cancelled'});
+            return res.status(200).json(orderCancel);
+        }
+        else
+            return res.status(200).json('cannot cancel a delivered order');        
     }
     catch(err){
         if(!err.statusCode)
