@@ -89,8 +89,15 @@ address.belongsTo(user);
 address.hasMany(order,{foreignKey:"addressId",constraints:false,onUpdate:"CASCADE",onDelete:"CASCADE"});
 order.belongsTo(address);
 
-sequelize.sync(
-  //{force:true}
-  )
-.then(category=>{app.listen(process.env.PORT||3000); console.log('result');})
+sequelize.sync()
+.then(result=>{return categories.findOne();})
+.then(cat=>{
+  if(!cat)
+    categories.bulkCreate([{category:'Jewellery'},{category:'Paintings and portraits'},
+      {category:'Bakery and chocolates'},{category:'Crystal And resin art'},
+      {category:'Under garments'},{category:'Thrift Shops'},{category:'Decorative items'},
+      {category:'Customised gifts'},{category:'Closet and wearable'},{category:'Stickers and fun'},
+      {category:"DIY's"},{category:'Makeup and accessories'},{category:'Others'}]);
+  return cat;})
+.then(cat=>{app.listen(process.env.PORT||3000);})
 .catch(err=>{console.log(err);});
