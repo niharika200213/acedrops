@@ -12,9 +12,6 @@ const { Op, Error } = require("sequelize");
 
 exports.createProduct = async (req, res, next) => {
     try{
-        const cat = await categories.findOne();
-        if(!cat)
-            await categories.bulkCreate([{category:'jewellery'},{category:'bakery'},{category:'art'}]);
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
