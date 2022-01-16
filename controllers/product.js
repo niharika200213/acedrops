@@ -71,7 +71,7 @@ exports.home = async (req, res, next) => {
 exports.categoryWise = async (req, res, next) => {
     try{
         let category = req.params.category;
-        category = category.trim().toLowerCase();
+        category = category.trim();
         const result = await categories.findOne({where:{category:category},include:[
             {model:product,include:
                 [{model:imgUrl,attributes:['imageUrl']}]}]});
