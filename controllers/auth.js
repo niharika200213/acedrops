@@ -104,7 +104,7 @@ exports.signup_verify = async (req, res, next) => {
                 process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
             await Token.create({token:refreshtoken,email:email});
             res.status(200).json({message:'signup successful', name:newUser.name, email:newUser.email,
-                access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id});
+                access_token:accesstoken,refresh_token:refreshtoken, id: newUser.id,googleId:null});
         }
         else{
             const err = new Error('wrong otp');
@@ -162,7 +162,7 @@ exports.login = async (req,res,next) => {
         {
             await Token.create({token:refreshtoken,email:email});
             return res.status(200).json({status:status,name:newUser.name,email:email,
-                access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id});
+                access_token:accesstoken,refresh_token:refreshtoken,id:newUser.id,googleId:newUser.googleId});
         }
         const err = new Error('wrong password');
         err.statusCode=401;
@@ -205,7 +205,7 @@ exports.googleSignup = async (req,res,next) => {
 
         await Token.create({token:refreshtoken,email:req.user.email});
         return res.status(200).json({status:status,access_token:accesstoken,name:newUser.name,
-            email:newUser.email,refresh_token:refreshtoken,id:newUser.id});
+            email:newUser.email,refresh_token:refreshtoken,id:newUser.id,googleId:newUser.googleId});
     }
     catch(err){
         if(!err.statusCode)
@@ -400,10 +400,22 @@ exports.changePass = async (req,res,next) => {
             err.statusCode=404;
             throw err;
         }
-        if(user)
+        if(user){
+            if(user.googleId){
+                const err= new Error('you cannot change password you can only reset it');
+                err.statusCode=400;
+                throw err;
+            }
             isValidUser = await bcrypt.compare(password,user.password);
-        else if(shop)
+        }
+        else if(shop){
+            if(shop.googleId){
+                const err= new Error('you cannot change password you can only reset it');
+                err.statusCode=400;
+                throw err;
+            }
             isValidShop = await bcrypt.compare(password,shop.password);
+        }
         if(isValidUser)
             newUser = user;
         else if(isValidShop)
