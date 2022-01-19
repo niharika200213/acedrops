@@ -94,7 +94,7 @@ exports.categoryWise = async (req, res, next) => {
         let category = req.params.category;
 
         //find products belonging to specified category
-
+      
         const result = await categories.findOne({where:{category:category},include:[
             {model:product,include:
                 [{model:imgUrl,attributes:['imageUrl']}]}]});
