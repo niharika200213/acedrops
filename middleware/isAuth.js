@@ -5,11 +5,17 @@ const User = require('../models/user')
 module.exports = async (req, res, next) => {
     try{
         let token = req.headers["authorization"];
+        if(!token)
+            return res.status(402).json({message: "User not authenticated" });
         token = token.split(" ")[1];
+
+        //verify jwt token
 
         jwt.verify(token, process.env.JWT_KEY_ACCESS, async (err, user) => {
             try{
-                if (user) {
+                if(user){
+                    //if verified then find user or seller
+
                     const email=user.email;
                     const userData = await User.findOne({where:{email:email}});
                     if(userData)

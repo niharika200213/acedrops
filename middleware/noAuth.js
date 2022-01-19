@@ -4,6 +4,8 @@ const User = require('../models/user')
 
 module.exports = async (req, res, next) => {
     try{
+        //for routes which do not require compulsory login
+        
         let token = req.headers["authorization"];
         if(!token){
             req.user = {id:-1};

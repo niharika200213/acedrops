@@ -5,6 +5,8 @@ const transporter = nodemailer.createTransport(nodemailersendgrid({
     auth:{api_key:process.env.API_KEY}
 }));
 
+//for otps
+
 exports.send_mail=(email,name,otp,text) =>{
     transporter.sendMail({
         from: "eventooze@gmail.com",to: email,
@@ -12,6 +14,8 @@ exports.send_mail=(email,name,otp,text) =>{
         text: 'Hello '+ name +',\n\n' + 'your otp is:' + otp + '\n\nThank You!\n',
     });
 };
+
+//for any other information
 
 exports.general_mail=(email,name,sub,text)=>{
     transporter.sendMail({

@@ -2,7 +2,6 @@ const express=require('express');
 const app=express();
 const cors=require('cors');
 require('dotenv/config');
-const path = require('path');
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const sellerRoutes = require('./routes/seller');
@@ -18,11 +17,9 @@ const fav = require('./models/fav');
 const imgUrl = require('./models/imgUrl');
 const order_item = require('./models/order_item');
 const order = require('./models/order');
-const otp = require('./models/otp');
 const product = require('./models/product');
 const reviews = require('./models/reviews');
 const shop = require('./models/shop');
-const token = require('./models/token');
 const user = require('./models/user');
 const product_category = require('./models/product_category');
 const address = require('./models/address');
@@ -36,11 +33,26 @@ app.use(cors({
   origin: "*",
   methods: ['GET','POST','PUT','DELETE', 'PATCH']
 }));
+
 app.use('/auth',authRoutes);
+/*signup, generate access token, login, logout, google signup and login, 
+forgot password, change password*/
+
 app.use('/shop',shopRoutes);
+/*create shop, upload adhaar card, seller pic, shop cover pic and view one shop*/
+
 app.use('/prod',prodRoutes);
+/*create product, home page, view one product, view category wise products, add and remove from cart, 
+delete whole product from cart, view cart, add and remove from wishlist, view wishlist*/
+
 app.use('/user',userRoutes);
+/*search, add ratings and reviews, add address, add phone number, get all your addresses,
+order whole cart, order one product, cancel order, view your orders*/
+
 app.use('/seller',sellerRoutes);
+/*update product details, update shop details, get all products of your shop,
+get all orders of your products, accept and reject orders, get all previous orders*/
+
 app.use('/admin',adminRoutes);
 app.get('/', function (req,res){res.json({name:"niharika"})});
 
@@ -93,6 +105,8 @@ sequelize.sync()
 .then(result=>{return categories.findOne();})
 .then(cat=>{
   if(!cat)
+  //create categories if it does not exists
+  
     categories.bulkCreate([{category:'Jewellery'},{category:'Paintings and portraits'},
       {category:'Bakery and chocolates'},{category:'Crystal And resin art'},
       {category:'Under garments'},{category:'Thrift Shops'},{category:'Decorative items'},
