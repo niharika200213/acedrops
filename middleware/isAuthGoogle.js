@@ -8,12 +8,16 @@ module.exports = async (req, res, next) => {
         let user = {};
         let ticket;
         if(isShop){
+            //verify google token for seller
+
             ticket = await clientShop.verifyIdToken({
                 idToken: token,
                 audience: process.env.CLIENT_ID_SHOP 
             });
         }
         else{
+            //verify google token for user
+
             ticket = await clientUser.verifyIdToken({
                 idToken: token,
                 audience: process.env.CLIENT_ID_USER 

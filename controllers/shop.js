@@ -17,18 +17,29 @@ exports.createShopInfo = async (req, res, next) => {
             err.statusCode=404;
             throw err; 
         }
+        //get shop details
+
         const {shopName,phno,noOfMembers,dob,description,address,fathersName,aadhaarNo} = req.body;
+
+        //check if adhaar no is valid
+
         if(!validator.isValidNumber(aadhaarNo)){
             const err = new Error('aadhaar number is not valid');
             err.statusCode=401;
             throw err; 
         }
         const shop = req.user;
+
+        //check for unique shop name
+
         if(shop.shopName){
             const err = new Error('shop already exists');
             err.statusCode=400;
             throw err; 
         }
+
+        //update the information
+
         await shop.update({shopName:shopName,phno:phno,dob:dob,noOfMembers:noOfMembers,description:description,
             address:address,fathersName:fathersName,aadhaarNo:aadhaarNo,status:1});
         return res.status(200).json({message:'personal information updated'});
@@ -51,29 +62,44 @@ exports.createShopAdhaarImg = async (req, res, next) => {
             err.statusCode=422;
             throw err;
         }
-        const {images} = req.body;
-        if(images.length!==2){
-            const err= new Error('please upload 2 images');
-            err.statusCode=401;
-            throw err; 
-        }
+        
+        //check if shop exists
+        
         if(req.type!=="shop"){
             const err= new Error('shop does not exists');
             err.statusCode=404;
             throw err;  
         }
+        const {images} = req.body;
+
+        //upload 2 adhaar images
+
+        if(images.length!==2){
+            const err= new Error('please upload 2 images');
+            err.statusCode=401;
+            throw err; 
+        }
         const shop = req.user;
+
+        //check if personal information is filled
+
         if(!shop.shopName){
             const err= new Error('please fill personal information first');
             err.statusCode=401;
             throw err; 
         }
+
+        //check if images are already uploaded
+
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
         if(adhaar.length > 0){
             const err= new Error('images already uploaded');
             err.statusCode=401;
             throw err; 
         }
+
+        //upload images
+
         for(let i=0;i<images.length;++i)
             await imgUrl.create({imageUrl:images[i],purpose:'adhaar',shopId:shop.id});
         await shop.update({status:2});
@@ -93,29 +119,44 @@ exports.createShopSellerPic = async (req, res, next) => {
             err.statusCode=422;
             throw err;
         }
+        
+        //check if shop exists
+        
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
             throw err; 
         }
         const shop = req.user;
+        
+        //check if personal information is filled
+
         if(!shop.shopName){
             const err = new Error('please fill personal information first');
             err.statusCode=400;
             throw err; 
         }
+        
+        //check if adhaar images are uploaded
+
         const adhaar = await imgUrl.findAll({where:{purpose:'adhaar',shopId:shop.id}});
         if(adhaar.length < 2){
             const err= new Error('update 2 adhaar card photos first');
             err.statusCode=400;
             throw err; 
         }
+
+        //check if seller image is already uploaded
+
         const sellerPic = await imgUrl.findOne({where:{purpose:'sellerPic',shopId:shop.id}});
         if(sellerPic){
             const err= new Error('picture already uploaded');
             err.statusCode=400;
             throw err; 
         }
+
+        //upload image
+
         await imgUrl.create({imageUrl:req.body.image,purpose:'sellerPic',shopId:shop.id});
         await shop.update({isApplied:true,status:3});
         return res.status(200).json({message:'picture uploaded'});
@@ -134,17 +175,25 @@ exports.coverPic = async (req, res, next) => {
             err.statusCode=422;
             throw err;
         }
+        //check if shop exists
+
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
             throw err; 
         }
+        
+        //check if personal information is filled
+
         const shop = req.user;
         if(!shop.isApplied){
             const err = new Error('please fill personal information first');
             err.statusCode=400;
             throw err; 
         }
+
+        //upload cover pic of shop
+
         await shop.createImgUrl({imageUrl:req.body.image,purpose:'coverPic'});
         return res.status(200).json({message:'picture uploaded'});
     }
@@ -157,6 +206,8 @@ exports.coverPic = async (req, res, next) => {
 
 exports.viewOneShop = async (req, res, next) => {
     try{
+        //view one shop through shop id with products of that shop
+        
         const shopId = req.params.shopId;
         const Shop = await shop.findOne({where:{id:shopId},attributes:['id','shopName','description',
             'name','email','phno'],
