@@ -6,7 +6,7 @@ const noAuth = require('../middleware/noAuth');
 
 const router = express.Router();
 
-router.get('/search', noAuth, userControllers.search);
+router.post('/search', noAuth, userControllers.search);
 
 router.post('/reviews/:prodId', isAuth, userControllers.rate);
 
