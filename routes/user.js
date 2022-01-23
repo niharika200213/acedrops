@@ -16,6 +16,8 @@ router.post('/addPhno', isAuth, userControllers.addPhno);
 
 router.get('/getAddress', isAuth, userControllers.getAddress);
 
+router.get('/getPhno', isAuth, userControllers.getPhno);
+
 router.post('/orderCart', isAuth, userControllers.orderCart);
 
 router.post('/orderProd', isAuth, userControllers.orderProd);
