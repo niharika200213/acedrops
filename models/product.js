@@ -20,6 +20,10 @@ const product = sequelize.define(
             type: Sequelize.TEXT,
             allowNull: false
         },
+        shortDescription: {
+            type: Sequelize.TEXT,
+            allowNull: false
+        },
         basePrice: {
             type: Sequelize.INTEGER,
             allowNull: false

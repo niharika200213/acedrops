@@ -26,7 +26,8 @@ exports.createProduct = async (req, res, next) => {
             err.statusCode=400;
             throw err;
         }
-        const {stock,title,description,basePrice,discountedPrice,offers,category,images} = req.body;
+        const {stock,title,description,basePrice,shortDescription,
+            discountedPrice,offers,category,images} = req.body;
         const prodCategory = await categories.findOne({where:{category:category}});
 
         //check if category of the product is in the list of categories
@@ -40,7 +41,8 @@ exports.createProduct = async (req, res, next) => {
         //create new product with images
 
         const newProd = await product.create({stock:stock,title:title,description:description,
-            basePrice:basePrice,discountedPrice:discountedPrice,offers:offers,shopId:shop.id});
+            basePrice:basePrice,discountedPrice:discountedPrice,shortDescription:shortDescription,
+            offers:offers,shopId:shop.id});
         await product_category.create({productId:newProd.id,categoryId:prodCategory.id});
         for(let i=0;i<images.length;++i)
             await newProd.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});

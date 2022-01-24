@@ -147,6 +147,19 @@ exports.getAddress = async (req, res, next) => {
     }
 };
 
+exports.getPhno = async (req, res, next) => {
+    try{
+        //return phone number of a user
+
+        return res.status(200).json(req.user.phno);
+    }
+    catch(err){
+        if(!err.statusCode)
+            err.statusCode=500;
+        next(err);
+    }
+};
+
 exports.orderCart = async (req, res, next) => {
     try{
         //check if phone number is filled by user
