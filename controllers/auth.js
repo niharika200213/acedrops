@@ -280,7 +280,7 @@ exports.generate_access_token = async (req,res,next) => {
         }
         const payload = jwt.verify(tokenInDb.token, process.env.JWT_KEY_REFRESH);
         const accessToken = jwt.sign({id:payload.id,email:payload.email}, 
-            process.env.JWT_KEY_ACCESS, {expiresIn: "1m"});
+            process.env.JWT_KEY_ACCESS, {expiresIn: "1d"});
         return res.status(200).json({access_token:accessToken});
     }
     catch(err){
