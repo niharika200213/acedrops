@@ -118,7 +118,7 @@ exports.signup_verify = async (req, res, next) => {
             //generate token
 
             const accesstoken=jwt.sign({id:newUser.id,email:newUser.email},
-                process.env.JWT_KEY_ACCESS,{expiresIn:"1m"});
+                process.env.JWT_KEY_ACCESS,{expiresIn:"1h"});
             const refreshtoken=jwt.sign({id:newUser.id,email:newUser.email},
                 process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
             await Token.create({token:refreshtoken,email:email});
@@ -173,7 +173,7 @@ exports.login = async (req,res,next) => {
         {
             newUser = user;
             accesstoken=jwt.sign({id:user.id,email:email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"1m"});
+            process.env.JWT_KEY_ACCESS,{expiresIn:"1h"});
             refreshtoken=jwt.sign({id:user.id,email:email},
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
         }
@@ -182,7 +182,7 @@ exports.login = async (req,res,next) => {
             newUser = shop;
             status=shop.status;
             accesstoken=jwt.sign({id:shop.id,email:email},
-            process.env.JWT_KEY_ACCESS,{expiresIn:"1m"});
+            process.env.JWT_KEY_ACCESS,{expiresIn:"1h"});
             refreshtoken=jwt.sign({id:shop.id,email:email},
             process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
         }
@@ -244,7 +244,7 @@ exports.googleSignup = async (req,res,next) => {
         //generate tokens and save refreshtoken
 
         const accesstoken=jwt.sign({id:newUser.id,email:req.user.email},
-        process.env.JWT_KEY_ACCESS,{expiresIn:"1m"});
+        process.env.JWT_KEY_ACCESS,{expiresIn:"1h"});
         const refreshtoken=jwt.sign({id:newUser.id,email:req.user.email},
         process.env.JWT_KEY_REFRESH,{expiresIn:"1y"});
 
