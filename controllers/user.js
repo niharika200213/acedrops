@@ -57,7 +57,7 @@ exports.rate = async (req, res, next) => {
         let ordered;
         const {review,rating} = req.body;
 
-        //check if product is already reviewed or rated\
+        //check if product is already reviewed or rated
 
         const alreadyReviewed = await reviews.findOne({where:{[Op.and]:
             [{userId:req.user.id,productId:prodId}]}});
@@ -75,7 +75,9 @@ exports.rate = async (req, res, next) => {
         if(orders.length>0){
             const orderIds = orders.map((result) => result.id);
             ordered = await order_item.findAll({where:{[Op.and]:[
-                {orderId:orderIds},{productId:prodId},{status:'delivered'}]}});
+                {orderId:orderIds},{productId:prodId}
+                //,{status:'delivered'}
+            ]}});
         }
         else{
             const err= new Error('you can rate or review a product only after buying it'); 

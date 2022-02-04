@@ -8,6 +8,7 @@ const categories = require('../models/categories');
 const shop = require('../models/shop');
 const fav = require('../models/fav');
 const reviews = require('../models/reviews');
+const User = require('../models/user');
 const { Op, Error } = require("sequelize");
 
 exports.createProduct = async (req, res, next) => {
@@ -126,9 +127,17 @@ exports.viewOneProd = async (req, res, next) => {
         if(prod){
 
             //return ratings and reviews by other users
+            const prodCat = await product_category.findOne({where:{productId:prodId}});
+            const category = await categories.findOne({where:{id:prodCat.categoryId},attributes:['category']});
 
             reviewsAndRatings = await reviews.findAll({where:{[Op.and]:[{productId:prodId},
                 {[Op.not]:[{userId:req.user.id}]}]}});
+            if(reviewsAndRatings.length>0){
+                reviewsAndRatings.forEach(async element => {
+                    const user = await User.findByPk(element.userId);
+                    element.userId = user.name;
+                });
+            }
 
             //return ratings and reviews by logged in user
 
@@ -147,7 +156,7 @@ exports.viewOneProd = async (req, res, next) => {
                 {userId:req.user.id}]},attributes:['productId']});
             if(favProd)
                 isFav=true;
-            return res.status(200).json({prod,userReview,reviewsAndRatings,rating,isFav});
+            return res.status(200).json({prod,category,userReview,reviewsAndRatings,rating,isFav});
         }
         const err= new Error('product not found'); 
         err.statusCode=400;
