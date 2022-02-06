@@ -245,7 +245,7 @@ exports.orderProd = async (req, res, next) => {
         let {addressId,quantity,prodId} = req.body;
         const addr = await address.findOne({where:{[Op.and]:[{id:addressId},{userId:req.user.id}]}});
         if(!addr){
-            const err= new Error('add address'); 
+            const err= new Error('add address');
             err.statusCode=402;
             throw err;
         }
