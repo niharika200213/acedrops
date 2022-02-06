@@ -346,7 +346,7 @@ exports.viewCart = async (req, res, next) => {
         if the given product exists in wishlist also*/
 
         const prodInCart = await cart.getProducts({include:
-            [{model:imgUrl,attributes:['imageUrl']}]});
+            [{model:imgUrl,attributes:['imageUrl']},{model:categories,attributes:['category']}]});
         const favProd = await fav.findAll({where:{userId:req.user.id},attributes:['productId']});
         return res.status(200).json({prodInCart,favProd});
     }
