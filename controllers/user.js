@@ -212,9 +212,15 @@ exports.orderCart = async (req, res, next) => {
                 await cart.destroy();
 
                 //delete items which have quantity 0
-
                 await order_item.destroy({where:{quantity:0}});
-                return res.status(200).json('order placed');
+                if(userOrder.price===0){
+                    await order_item.destroy({where:{orderId:userOrder.id}});
+                    await userOrder.destroy();
+                    return res.status(400).json('everything out of stock');
+                }
+                else{ 
+                    return res.status(200).json('order placed');
+                }
             }
         }
         else{
