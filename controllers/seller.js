@@ -8,58 +8,6 @@ const product = require('../models/product');
 const { Op, Error } = require("sequelize");
 const address = require('../models/address');
 
-exports.updateProd = async (req, res, next) => {
-    try{
-        if(!validationResult(req).isEmpty()){
-            const err = new Error(validationResult(req).errors[0].msg);
-            err.statusCode=422;
-            throw err;
-        }
-
-        //check if user is a seller
-
-        if(req.type!=='shop'){
-            const err = new Error('something went wrong');
-            err.statusCode=400;
-            throw err;
-        }
-
-        //check if product exists
-
-        const {prodId} = req.params;
-        const prod = await product.findByPk(prodId);
-        if(!prod){
-            const err = new Error('product does not exists');
-            err.statusCode=400;
-            throw err;
-        }
-
-        //check if user owns this product
-
-        if(prod.shopId!==req.user.id){
-            const err = new Error('you cannot edit this product');
-            err.statusCode=400;
-            throw err;
-        }
-
-        //update prod
-
-        const {stock,title,description,basePrice,discountedPrice,offers} = req.body;
-        await prod.update({stock:stock,title:title,description:description,basePrice:basePrice,
-            discountedPrice:discountedPrice,offers:offers});
-        return res.status(200).json(prod);
-    }
-    catch(err){
-        if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError'){
-            err.errors[0].statusCode=422;
-            next(err.errors[0]);
-        }
-        if(!err.statusCode)
-            err.statusCode=500;
-        next(err);
-    }
-};
-
 exports.updateShop = async (req, res, next) => {
     try{
         if(!validationResult(req).isEmpty()){

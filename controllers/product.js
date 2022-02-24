@@ -13,6 +13,12 @@ const { Op, Error } = require("sequelize");
 
 exports.createProduct = async (req, res, next) => {
     try{
+        if(!validationResult(req).isEmpty()){
+            const err = new Error(validationResult(req).errors[0].msg);
+            err.statusCode=422;
+            throw err;
+        }
+
         if(req.type!=="shop"){
             const err= new Error('shop does not exists'); 
             err.statusCode=404;
@@ -28,7 +34,7 @@ exports.createProduct = async (req, res, next) => {
             throw err;
         }
         const {stock,title,description,basePrice,shortDescription,
-            discountedPrice,offers,category,images} = req.body;
+            discountedPrice,offers,category,images,newProd} = req.body;
         const prodCategory = await categories.findOne({where:{category:category}});
 
         //check if category of the product is in the list of categories
@@ -39,15 +45,46 @@ exports.createProduct = async (req, res, next) => {
             throw err;
         }
 
-        //create new product with images
+        if(newProd==-1){
+            //create new product with images
 
-        const newProd = await product.create({stock:stock,title:title,description:description,
-            basePrice:basePrice,discountedPrice:discountedPrice,shortDescription:shortDescription,
-            offers:offers,shopId:shop.id});
-        await product_category.create({productId:newProd.id,categoryId:prodCategory.id});
-        for(let i=0;i<images.length;++i)
-            await newProd.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
-        return res.status(200).json({message:'product created'});
+            const newProd = await product.create({stock:stock,title:title,description:description,
+                basePrice:basePrice,discountedPrice:discountedPrice,shortDescription:shortDescription,
+                offers:offers,shopId:shop.id});
+            await product_category.create({productId:newProd.id,categoryId:prodCategory.id});
+            for(let i=0;i<images.length;++i)
+                await newProd.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
+            return res.status(200).json({message:'product created'});
+        }
+
+        else{
+            const prod = await product.findByPk(newProd);
+            if(!prod){
+                const err = new Error('product does not exists');
+                err.statusCode=400;
+                throw err;
+            }
+
+            //check if user owns this product
+
+            if(prod.shopId!==req.user.id){
+                const err = new Error('you cannot edit this product');
+                err.statusCode=400;
+                throw err;
+            }
+
+            //update prod
+            
+            await prod.update({stock:stock,title:title,description:description,basePrice:basePrice,
+                shortDescription:shortDescription,discountedPrice:discountedPrice,offers:offers});
+            await product_category.update({categoryId:prodCategory.id},{where:{productId:prod.id}});
+            await imgUrl.destroy({where:{[Op.and]:[{purpose:'product'},{shopId:shop.id}]}});
+            for(let i=0;i<images.length;++i)
+                await prod.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
+
+            return res.status(200).json(prod);
+        }
+        
     }
     catch(err){
         if(err.name==='SequelizeUniqueConstraintError'||err.name==='SequelizeValidationError')
