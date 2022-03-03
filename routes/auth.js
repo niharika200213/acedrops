@@ -41,7 +41,6 @@ router.post('/signup/verify',[
         .isLength({ max: 50 })
         .withMessage('password must be at-max 50 characters long'),
     body('otp')
-        .trim()
         .not()
         .isEmpty()
         .withMessage('please enter otp')
@@ -82,7 +81,6 @@ router.post('/forgotPassVerify', [
         .withMessage('please enter a valid email')
         .normalizeEmail(),
     body('otp')
-        .trim()
         .not()
         .isEmpty()
         .withMessage('please enter otp')

@@ -8,13 +8,13 @@ const router = express.Router();
 
 router.post('/createShop', [
     body('shopName').trim().not().isEmpty().withMessage('please enter shop name'),
-    body('phno').trim().not().isEmpty().withMessage('please enter your phone number'),
-    body('noOfMembers').trim().not().isEmpty().withMessage('please enter number of Members'),
-    body('dob').trim().not().isEmpty().withMessage('please enter your dob'),
+    body('phno').not().isEmpty().withMessage('please enter your phone number'),
+    body('noOfMembers').not().isEmpty().withMessage('please enter number of Members'),
+    body('dob').not().isEmpty().withMessage('please enter your dob'),
     body('description').trim().not().isEmpty().withMessage('please enter description'),
     body('address').trim().not().isEmpty().withMessage('please enter address'),
     body('fathersName').trim().not().isEmpty().withMessage('please enter fathers name'),
-    body('aadhaarNo').trim().not().isEmpty().withMessage('please enter aadhaar number'),
+    body('aadhaarNo').not().isEmpty().withMessage('please enter aadhaar number'),
 ], isAuth, shopController.createShopInfo);
 
 router.post('/createShopAdhaar', [

@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.post('/updateShop', [
     body('shopName').trim().not().isEmpty().withMessage('please enter shop name'),
-    body('phno').trim().not().isEmpty().withMessage('please enter your phone number'),
-    body('noOfMembers').trim().not().isEmpty().withMessage('please enter number of Members'),
+    body('phno').not().isEmpty().withMessage('please enter your phone number'),
+    body('noOfMembers').not().isEmpty().withMessage('please enter number of Members'),
     body('description').trim().not().isEmpty().withMessage('please enter description'),
     body('address').trim().not().isEmpty().withMessage('please enter address'),
 ], isAuth, sellerController.updateShop);
