@@ -39,11 +39,7 @@ router.post('/signup/verify',[
         .isLength({ min: 8 })
         .withMessage('password must be atleast 8 characters long')
         .isLength({ max: 50 })
-        .withMessage('password must be at-max 50 characters long'),
-    body('otp')
-        .not()
-        .isEmpty()
-        .withMessage('please enter otp')
+        .withMessage('password must be at-max 50 characters long')
     ], authController.signup_verify);
 
 router.post('/generateToken', authController.generate_access_token);
@@ -79,11 +75,7 @@ router.post('/forgotPassVerify', [
         .trim()
         .isEmail()
         .withMessage('please enter a valid email')
-        .normalizeEmail(),
-    body('otp')
-        .not()
-        .isEmpty()
-        .withMessage('please enter otp')
+        .normalizeEmail()
 ], authController.forgotPassVerify);
 
 router.post('/newpass', [
