@@ -8,11 +8,8 @@ const noAuth = require('../middleware/noAuth');
 const router = express.Router();
 
 router.post('/createProduct', [
-    body('stock').not().isEmpty().withMessage('please enter stock'),
     body('title').trim().not().isEmpty().withMessage('please enter title'),
     body('description').trim().not().isEmpty().withMessage('please enter description'),
-    body('basePrice').not().isEmpty().withMessage('please enter base price'),
-    body('discountedPrice').not().isEmpty().withMessage('please enter discounted price'),
     body('shortDescription').trim().not().isEmpty().withMessage('please enter shortDescription'),
     body('offers').trim().not().isEmpty().withMessage('please enter offers'),
     body('category').trim().not().isEmpty().withMessage('please enter category'),
