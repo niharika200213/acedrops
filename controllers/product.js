@@ -78,7 +78,8 @@ exports.createProduct = async (req, res, next) => {
             await prod.update({stock:stock,title:title,description:description,basePrice:basePrice,
                 shortDescription:shortDescription,discountedPrice:discountedPrice,offers:offers});
             await product_category.update({categoryId:prodCategory.id},{where:{productId:prod.id}});
-            await imgUrl.destroy({where:{[Op.and]:[{purpose:'product'},{shopId:shop.id}]}});
+            await imgUrl.destroy({where:{[Op.and]:[{purpose:'product'},{shopId:shop.id},
+                {productId:prod.id}]}});
             for(let i=0;i<images.length;++i)
                 await prod.createImgUrl({imageUrl:images[i],purpose:'product',shopId:shop.id});
 
